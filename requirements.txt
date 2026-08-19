@@ -1,0 +1,36 @@
+# Pinned loosely on purpose: this is a learning project, not a shipped library.
+
+# --- ingest: AST-based chunking ---
+# One grammar wheel per language, named in config.LANGUAGE_REGISTRY.
+# Not tree_sitter_languages (unmaintained, no 3.12 wheels) and not
+# tree-sitter-language-pack (>=1.0 downloads grammars from GitHub at runtime).
+tree-sitter>=0.23
+tree-sitter-python>=0.23
+tree-sitter-javascript>=0.23    # .js .mjs .cjs .jsx
+tree-sitter-typescript>=0.23    # .ts .mts .cts and, separately, .tsx
+tree-sitter-go>=0.23
+tree-sitter-rust>=0.23
+tree-sitter-java>=0.23
+tree-sitter-c-sharp>=0.23
+tree-sitter-ruby>=0.23
+tree-sitter-c>=0.23             # .c .h
+tree-sitter-cpp>=0.23           # .cpp .cc .cxx .hpp .hh .hxx
+tree-sitter-php>=0.23
+
+# --- index: embeddings + stores ---
+sentence-transformers>=3.0
+chromadb>=0.5
+rank-bm25>=0.2.2
+
+# --- agent ---
+langgraph>=0.2
+langchain-core>=0.3
+anthropic>=0.40                     # LLM for the agent + reflection loop
+
+# --- serve ---
+fastapi>=0.115
+uvicorn[standard]>=0.30
+
+# --- test ---
+pytest>=8.0
+httpx>=0.27                         # fastapi TestClient dependency

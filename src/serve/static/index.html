@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Codebase Q&amp;A + Review</title>
+<style>
+  /* Light palette on :root, dark only overriding tokens, so the page follows
+     the OS setting without a toggle and without a flash of the wrong theme. */
+  :root {
+    --bg: #fbfbfa;    --panel: #ffffff;  --ink: #1a1a19;   --muted: #6b6b68;
+    --line: #e4e4e1;  --accent: #2f6f4f; --accent-ink: #ffffff;
+    --code-bg: #f4f4f2;
+    --blocker: #b3261e; --warning: #a15c00; --suggestion: #2f6f4f; --note: #6b6b68;
+    --radius: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16171a;  --panel: #1e1f23;  --ink: #e8e8e6;  --muted: #9a9a96;
+      --line: #303136; --accent: #6dbb8f; --accent-ink: #10110f;
+      --code-bg: #24262b;
+      --blocker: #f2837b; --warning: #e0a350; --suggestion: #6dbb8f; --note: #9a9a96;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  code, pre, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 24px 20px 64px; }
+
+  header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  h1 { font-size: 20px; margin: 0; font-weight: 620; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 13px; }
+  #health { margin-left: auto; font-size: 12px; color: var(--muted); }
+  #health b { color: var(--ink); font-weight: 560; }
+
+  .tabs { display: flex; gap: 4px; margin: 20px 0 14px; border-bottom: 1px solid var(--line); }
+  .tab {
+    padding: 8px 14px; border: 0; background: none; color: var(--muted);
+    font: inherit; font-size: 14px; cursor: pointer; border-bottom: 2px solid transparent;
+  }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 560; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+  .panel + .panel { margin-top: 14px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  input, select, textarea {
+    width: 100%; padding: 8px 10px; font: inherit; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+  }
+  textarea { min-height: 150px; resize: vertical; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button.go {
+    padding: 9px 18px; border: 0; border-radius: 6px; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 560;
+  }
+  button.go[disabled] { opacity: .5; cursor: default; }
+  .grow { flex: 1 1 280px; }
+
+  .answer { white-space: pre-wrap; word-wrap: break-word; }
+  .answer code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  .cursor { display: inline-block; width: 7px; height: 1em; background: var(--accent);
+            vertical-align: -2px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* chat */
+  #chat:empty { display: none; }
+  .turn { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .turn:last-child { border-bottom: 0; }
+  .turn .who { font-size: 11px; color: var(--muted); text-transform: uppercase;
+               letter-spacing: .05em; margin-bottom: 3px; }
+  .turn.q .body { font-weight: 560; }
+  .turn .meta { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap;
+                margin-top: 8px; font-size: 12px; color: var(--muted); }
+
+  .metrics { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 16px;
+             padding-top: 14px; border-top: 1px solid var(--line); }
+  .metric .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .metric .v { font-size: 17px; font-weight: 560; font-variant-numeric: tabular-nums; }
+
+  details.sources { margin-top: 8px; }
+  details.sources summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  .src { display: flex; gap: 10px; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--line); }
+  .src .loc { color: var(--accent); }
+  .src .sym { color: var(--muted); }
+
+  .stages { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+  .stages div { padding: 2px 0; }
+
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 11px;
+           font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+  .ok { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+  .bad { background: color-mix(in srgb, var(--blocker) 18%, transparent); color: var(--blocker); }
+
+  .comment { padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .comment .head { display: flex; gap: 10px; align-items: baseline; font-size: 13px; }
+  .comment .sev { font-weight: 660; text-transform: uppercase; font-size: 11px; letter-spacing: .04em; }
+  .sev-blocker { color: var(--blocker); } .sev-warning { color: var(--warning); }
+  .sev-suggestion { color: var(--suggestion); } .sev-note { color: var(--note); }
+  .comment .msg { margin-top: 3px; }
+
+  .err { color: var(--blocker); background: color-mix(in srgb, var(--blocker) 10%, transparent);
+         padding: 10px 12px; border-radius: 6px; margin-top: 14px; font-size: 14px; }
+  .hint { color: var(--muted); font-size: 12.5px; margin-top: 8px; }
+  .hidden { display: none; }
+  .out { margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Codebase Q&amp;A</h1>
+    <span class="sub">pick a repository, then chat about its code</span>
+    <span id="health">checking…</span>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="ask">Ask</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="review">Review a diff</button>
+  </div>
+
+  <!-- ── Ask ─────────────────────────────────────────────────────────── -->
+  <section id="tab-ask">
+    <div class="panel">
+      <div class="row">
+        <div class="grow">
+          <label for="repoSel">Repository</label>
+          <select id="repoSel"><option value="">— none loaded yet —</option></select>
+        </div>
+        <div class="grow">
+          <label for="repoNew">Add from GitHub</label>
+          <input id="repoNew" placeholder="owner/repo   e.g. psf/requests" spellcheck="false">
+        </div>
+        <button class="go" id="loadBtn">Load &amp; index</button>
+      </div>
+      <div id="idxProgress" class="stages hidden"></div>
+      <div id="idxErr" class="err hidden"></div>
+      <div class="hint" id="repoHint">Paste a GitHub repository above — it is cloned and
+        indexed once, then you can ask anything about its code.</div>
+    </div>
+
+    <div class="panel">
+      <div id="chat"></div>
+      <div class="row" style="margin-top:4px">
+        <div class="grow">
+          <label for="q">Your question</label>
+          <input id="q" placeholder="How are redirects followed?" spellcheck="false">
+        </div>
+        <button class="go" id="askBtn" disabled>Ask</button>
+      </div>
+      <div id="askErr" class="err hidden"></div>
+    </div>
+  </section>
+
+  <!-- ── Review ──────────────────────────────────────────────────────── -->
+  <section id="tab-review" class="hidden">
+    <div class="panel">
+      <div class="row">
+        <div class="grow">
+          <label for="rrepo">Repository</label>
+          <select id="rrepo"><option value="">— load one on the Ask tab —</option></select>
+        </div>
+        <div style="flex:0 0 110px">
+          <label for="maxh">Max hunks</label>
+          <input id="maxh" type="number" value="5" min="1" max="200">
+        </div>
+        <button class="go" id="revBtn">Review</button>
+      </div>
+      <div style="margin-top:10px">
+        <label for="diff">Unified diff</label>
+        <textarea id="diff" spellcheck="false"
+          placeholder="git diff main... | clip   then paste here"></textarea>
+      </div>
+    </div>
+
+    <div class="out hidden" id="revOut">
+      <div class="panel">
+        <div id="revSummary" class="sub"></div>
+        <div id="revErr" class="err hidden"></div>
+        <div id="comments"></div>
+        <div class="metrics hidden" id="revMetrics"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+// Render `backticked` spans as code without pulling in a markdown library —
+// citations are the main thing worth highlighting and they are always backticked.
+const inlineCode = (s) => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
+
+// ── tabs ──────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t =>
+      t.setAttribute('aria-selected', String(t === tab)));
+    $('tab-ask').classList.toggle('hidden', tab.dataset.tab !== 'ask');
+    $('tab-review').classList.toggle('hidden', tab.dataset.tab !== 'review');
+  };
+});
+
+// ── health ────────────────────────────────────────────────────────────
+fetch('/health').then(r => r.json()).then(h => {
+  $('health').innerHTML = `${h.provider} · <b>${esc(h.model || '—')}</b>`;
+}).catch(() => { $('health').textContent = 'service unreachable'; });
+
+// ── SSE over POST: fetch + a manual frame parser (EventSource is GET-only)
+async function sse(url, body, onEvent) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 300)}`);
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  while (true) {
+    const {done, value} = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, {stream: true});
+    // Frames are separated by a blank line; anything after the last separator
+    // is a partial frame and stays in the buffer.
+    const frames = buffer.split('\n\n');
+    buffer = frames.pop();
+    for (const frame of frames) {
+      const ev = (frame.match(/^event: (.*)$/m) || [])[1];
+      const raw = (frame.match(/^data: (.*)$/m) || [])[1];
+      if (ev && raw) onEvent(ev, JSON.parse(raw));
+    }
+  }
+}
+
+// ── repositories ──────────────────────────────────────────────────────
+function currentRepo() { return $('repoSel').value; }
+
+function refreshAskState() {
+  const opt = $('repoSel').selectedOptions[0];
+  const ready = Boolean(opt && opt.value && opt.dataset.indexed === 'true');
+  $('askBtn').disabled = !ready;
+  if (opt && opt.value && ready) $('rrepo').value = opt.value;
+  $('repoHint').classList.toggle('hidden', ready);
+  $('repoHint').textContent = (opt && opt.value && !ready)
+    ? 'This repository is cloned but not indexed yet — press "Load & index".'
+    : 'Paste a GitHub repository above — it is cloned and indexed once, then you can ask anything about its code.';
+}
+
+async function loadRepoList(selectPath) {
+  try {
+    const data = await (await fetch('/repos')).json();
+    const options = data.repos.map(r =>
+      `<option value="${esc(r.path)}" data-indexed="${r.indexed}">
+         ${esc(r.name)}${r.indexed ? '' : ' (not indexed)'}
+       </option>`).join('');
+    $('repoSel').innerHTML = options || '<option value="">— none loaded yet —</option>';
+    // The review tab reviews the same store; only indexed repos are usable.
+    $('rrepo').innerHTML = data.repos.filter(r => r.indexed).map(r =>
+      `<option value="${esc(r.path)}">${esc(r.name)}</option>`).join('')
+      || '<option value="">— load one on the Ask tab —</option>';
+    if (selectPath) $('repoSel').value = selectPath;
+    refreshAskState();
+  } catch { /* /repos unreachable; the health line already says so */ }
+}
+$('repoSel').onchange = refreshAskState;
+loadRepoList();
+
+$('loadBtn').onclick = async () => {
+  // Prefer the new-repo input; fall back to re-indexing the selection.
+  const target = $('repoNew').value.trim() || currentRepo();
+  if (!target) return;
+
+  $('loadBtn').disabled = true;
+  $('idxErr').classList.add('hidden');
+  $('idxProgress').classList.remove('hidden');
+  $('idxProgress').innerHTML = '<div>starting…</div>';
+
+  try {
+    await sse('/index', {repo: target}, (ev, data) => {
+      if (ev === 'stage') {
+        $('idxProgress').innerHTML += `<div>${esc(data.detail)}</div>`;
+      } else if (ev === 'done') {
+        $('idxProgress').innerHTML +=
+          `<div><span class="badge ok">ready</span>&nbsp;${esc(data.name)} — ` +
+          `${data.chunks} chunks (${data.embedded} embedded, ${data.cached} cached)</div>`;
+        $('repoNew').value = '';
+        loadRepoList(data.path);
+      } else if (ev === 'error') {
+        $('idxErr').textContent = data.detail;
+        $('idxErr').classList.remove('hidden');
+      }
+    });
+  } catch (e) {
+    $('idxErr').textContent = e.message;
+    $('idxErr').classList.remove('hidden');
+  } finally {
+    $('loadBtn').disabled = false;
+  }
+};
+
+// ── metrics / sources ─────────────────────────────────────────────────
+function metricsLine(m) {
+  const parts = [`${(m.total_ms / 1000).toFixed(1)} s`];
+  if (m.ttft_ms != null) parts.push(`first token ${Math.round(m.ttft_ms)} ms`);
+  parts.push(`${m.input_tokens}/${m.output_tokens} tok`);
+  if (m.tokens_per_second != null) parts.push(`${m.tokens_per_second} tok/s`);
+  return parts.join(' · ');
+}
+
+function sourcesBlock(list) {
+  if (!list || !list.length) return '';
+  const rows = list.map(s =>
+    `<div class="src"><span class="loc mono">${esc(s.location)}</span>
+     <span class="sym">${esc(s.kind)} ${esc(s.symbol)}</span></div>`).join('');
+  return `<details class="sources"><summary>${list.length} sources retrieved</summary>${rows}</details>`;
+}
+
+// ── chat ──────────────────────────────────────────────────────────────
+function addTurn(who, cls) {
+  const div = document.createElement('div');
+  div.className = `turn ${cls}`;
+  div.innerHTML = `<div class="who">${who}</div><div class="body"></div>`;
+  $('chat').appendChild(div);
+  div.scrollIntoView({block: 'end'});
+  return div;
+}
+
+$('askBtn').onclick = async () => {
+  const question = $('q').value.trim();
+  const repo = currentRepo();
+  if (!question || !repo) return;
+
+  $('askBtn').disabled = true;
+  $('askErr').classList.add('hidden');
+  $('q').value = '';
+
+  addTurn('you', 'q').querySelector('.body').textContent = question;
+  const turn = addTurn('agent', 'a');
+  const body = turn.querySelector('.body');
+  body.innerHTML = '<span class="answer"></span><span class="cursor"></span>';
+  const answerEl = body.querySelector('.answer');
+  const stagesEl = document.createElement('div');
+  stagesEl.className = 'stages';
+  turn.appendChild(stagesEl);
+
+  let text = '';
+  try {
+    // Always the agent: every answer goes through the reflection loop and
+    // carries a grounded/not-grounded verdict.
+    await sse('/ask', {repo, question, mode: 'agent'}, (ev, data) => {
+      if (ev === 'token') {
+        text += data.text;
+        answerEl.innerHTML = inlineCode(text);
+      } else if (ev === 'stage') {
+        stagesEl.innerHTML += `<div>${esc(data.detail || data.stage)}</div>`;
+      } else if (ev === 'done') {
+        answerEl.innerHTML = inlineCode(data.answer || text);
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        let badge = '';
+        if (data.grounded !== null && data.grounded !== undefined) {
+          badge = `<span class="badge ${data.grounded ? 'ok' : 'bad'}">
+                     ${data.grounded ? 'grounded' : 'not grounded'}</span>
+                   <span>${data.attempts} attempt(s)</span>`;
+        }
+        meta.innerHTML = `${badge}<span>${esc(metricsLine(data.metrics))}</span>`;
+        turn.appendChild(meta);
+        if (data.sources?.length) {
+          turn.insertAdjacentHTML('beforeend', sourcesBlock(data.sources));
+        }
+      } else if (ev === 'error') {
+        $('askErr').textContent = data.detail;
+        $('askErr').classList.remove('hidden');
+      }
+    });
+  } catch (e) {
+    $('askErr').textContent = e.message;
+    $('askErr').classList.remove('hidden');
+  } finally {
+    refreshAskState();
+    turn.querySelectorAll('.cursor').forEach(c => c.remove());
+    turn.scrollIntoView({block: 'end'});
+  }
+};
+
+// ── review ────────────────────────────────────────────────────────────
+$('revBtn').onclick = async () => {
+  const btn = $('revBtn');
+  const diff = $('diff').value;
+  if (!diff.trim()) return;
+
+  btn.disabled = true;
+  $('revOut').classList.remove('hidden');
+  $('revSummary').textContent = 'reviewing…';
+  $('comments').innerHTML = '';
+  $('revErr').classList.add('hidden');
+  $('revMetrics').classList.add('hidden');
+
+  try {
+    const res = await fetch('/review', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        repo: $('rrepo').value.trim(), diff, max_hunks: Number($('maxh').value),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+
+    const counts = Object.entries(data.by_severity).map(([k, v]) => `${v} ${k}`).join(', ');
+    $('revSummary').textContent =
+      `${data.comments.length} comments${counts ? ' (' + counts + ')' : ''} over ` +
+      `${data.hunks_reviewed} hunks in ${data.files_reviewed} files`;
+
+    $('comments').innerHTML = data.comments.length
+      ? data.comments.map(c => `
+          <div class="comment">
+            <div class="head">
+              <span class="sev sev-${esc(c.severity)}">${esc(c.severity)}</span>
+              <span class="mono">${esc(c.file)}:${c.line}</span>
+            </div>
+            <div class="msg">${inlineCode(c.message)}</div>
+          </div>`).join('')
+      : '<div class="hint">No comments — the diff looks clean.</div>';
+
+    const m = data.metrics;
+    $('revMetrics').innerHTML =
+      `<div class="metric"><div class="k">total</div><div class="v">${(m.total_ms / 1000).toFixed(1)} s</div></div>
+       <div class="metric"><div class="k">tokens in / out</div><div class="v">${m.input_tokens} / ${m.output_tokens}</div></div>`;
+    $('revMetrics').classList.remove('hidden');
+  } catch (e) {
+    $('revSummary').textContent = '';
+    $('revErr').textContent = e.message;
+    $('revErr').classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+$('q').addEventListener('keydown', e => { if (e.key === 'Enter') $('askBtn').click(); });
+$('repoNew').addEventListener('keydown', e => { if (e.key === 'Enter') $('loadBtn').click(); });
+</script>
+</body>
+</html>

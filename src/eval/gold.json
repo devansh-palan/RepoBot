@@ -1,0 +1,1353 @@
+{
+  "repos": {
+    "requests": {
+      "path": "data/repos/requests",
+      "commit": "8f8b212"
+    },
+    "click": {
+      "path": "data/repos/click",
+      "commit": "61b69e9"
+    }
+  },
+  "_comment": "Labels are (file, symbol) pairs matching Chunk.file_path and Chunk.symbol; run `python -m src.eval --validate` after any edit. split=dev is the original 30, written before any tuning and then tuned against, so it is contaminated and only dev may inform config changes. split=test is held out: it adds a second repo and lexical questions that name identifiers, which the all-semantic dev split lacks entirely. A change that helps dev but not test is overfitting.",
+  "questions": [
+    {
+      "id": "f01",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "Where is the HTTP Basic authentication header string built?",
+      "answers": [
+        {
+          "file": "src/requests/auth.py",
+          "symbol": "_basic_auth_str"
+        }
+      ]
+    },
+    {
+      "id": "f02",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "Which function extracts the redirect target from a response?",
+      "answers": [
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "SessionRedirectMixin.get_redirect_target"
+        }
+      ]
+    },
+    {
+      "id": "f03",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "What decides whether the Authorization header should be stripped when following a redirect?",
+      "answers": [
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "SessionRedirectMixin.should_strip_auth"
+        }
+      ]
+    },
+    {
+      "id": "f04",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "Where is the default User-Agent string constructed?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "default_user_agent"
+        }
+      ]
+    },
+    {
+      "id": "f05",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "Which class provides case-insensitive header lookup?",
+      "answers": [
+        {
+          "file": "src/requests/structures.py",
+          "symbol": "CaseInsensitiveDict"
+        }
+      ],
+      "note": "CaseInsensitiveDict has two chunks (class header plus a trailing member); either counts."
+    },
+    {
+      "id": "f06",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "Where does requests read the character encoding out of the response headers?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "get_encoding_from_headers"
+        }
+      ]
+    },
+    {
+      "id": "f07",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "Which method raises an exception for a 4xx or 5xx status code?",
+      "answers": [
+        {
+          "file": "src/requests/models.py",
+          "symbol": "Response.raise_for_status"
+        }
+      ]
+    },
+    {
+      "id": "f08",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "Where is the JSON body of a response decoded?",
+      "answers": [
+        {
+          "file": "src/requests/models.py",
+          "symbol": "Response.json"
+        }
+      ]
+    },
+    {
+      "id": "f09",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "Which function picks the proxy to use for a given URL scheme?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "select_proxy"
+        }
+      ]
+    },
+    {
+      "id": "f10",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "Where is the Digest authentication header assembled?",
+      "answers": [
+        {
+          "file": "src/requests/auth.py",
+          "symbol": "HTTPDigestAuth.build_digest_header"
+        }
+      ]
+    },
+    {
+      "id": "f11",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "How do you attach a transport adapter to a URL prefix?",
+      "answers": [
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "Session.mount"
+        }
+      ]
+    },
+    {
+      "id": "f12",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "Where is the urllib3 connection pool manager initialised?",
+      "answers": [
+        {
+          "file": "src/requests/adapters.py",
+          "symbol": "HTTPAdapter.init_poolmanager"
+        }
+      ]
+    },
+    {
+      "id": "f13",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "Where does requests look up credentials in the netrc file?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "get_netrc_auth"
+        }
+      ]
+    },
+    {
+      "id": "f14",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "Which function parses a Link header into a list of dicts?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "parse_header_links"
+        }
+      ]
+    },
+    {
+      "id": "f15",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "factual",
+      "style": "semantic",
+      "question": "Where is the request body rewound so a retry can resend it?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "rewind_body"
+        }
+      ]
+    },
+    {
+      "id": "e01",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does requests follow a chain of redirects from one response to the next?",
+      "answers": [
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "SessionRedirectMixin.resolve_redirects"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "SessionRedirectMixin.get_redirect_target"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "Session.send"
+        }
+      ]
+    },
+    {
+      "id": "e02",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "What happens to authentication credentials when a request is redirected to another host?",
+      "answers": [
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "SessionRedirectMixin.should_strip_auth"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "SessionRedirectMixin.rebuild_auth"
+        }
+      ]
+    },
+    {
+      "id": "e03",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How is a user-facing Request turned into a PreparedRequest before it is sent?",
+      "answers": [
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "Session.prepare_request"
+        },
+        {
+          "file": "src/requests/models.py",
+          "symbol": "Request.prepare"
+        },
+        {
+          "file": "src/requests/models.py",
+          "symbol": "PreparedRequest.prepare"
+        }
+      ]
+    },
+    {
+      "id": "e04",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does streaming a response body in chunks work?",
+      "answers": [
+        {
+          "file": "src/requests/models.py",
+          "symbol": "Response.iter_content"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "iter_slices"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "stream_decode_response_unicode"
+        }
+      ],
+      "note": "Both iter_content and iter_slices carry @overload stubs; any matching chunk counts."
+    },
+    {
+      "id": "e05",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How are session-level defaults combined with per-request arguments?",
+      "answers": [
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "merge_setting"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "Session.merge_environment_settings"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "Session.request"
+        }
+      ]
+    },
+    {
+      "id": "e06",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does the HTTP adapter turn a urllib3 response into a requests Response object?",
+      "answers": [
+        {
+          "file": "src/requests/adapters.py",
+          "symbol": "HTTPAdapter.build_response"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "symbol": "HTTPAdapter.send"
+        }
+      ]
+    },
+    {
+      "id": "e07",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does requests work out which proxy applies, including when to bypass proxying entirely?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "resolve_proxies"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "should_bypass_proxies"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "select_proxy"
+        }
+      ]
+    },
+    {
+      "id": "e08",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How are cookies carried from one request to the next within a session?",
+      "answers": [
+        {
+          "file": "src/requests/cookies.py",
+          "symbol": "extract_cookies_to_jar"
+        },
+        {
+          "file": "src/requests/cookies.py",
+          "symbol": "get_cookie_header"
+        },
+        {
+          "file": "src/requests/models.py",
+          "symbol": "PreparedRequest.prepare_cookies"
+        }
+      ]
+    },
+    {
+      "id": "e09",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "What path does a call to requests.get() take before it reaches a transport adapter?",
+      "answers": [
+        {
+          "file": "src/requests/api.py",
+          "symbol": "get"
+        },
+        {
+          "file": "src/requests/api.py",
+          "symbol": "request"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "Session.request"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "Session.send"
+        }
+      ]
+    },
+    {
+      "id": "e10",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How is a multipart file upload encoded into a request body?",
+      "answers": [
+        {
+          "file": "src/requests/models.py",
+          "symbol": "RequestEncodingMixin._encode_files"
+        },
+        {
+          "file": "src/requests/models.py",
+          "symbol": "RequestEncodingMixin._encode_params"
+        }
+      ]
+    },
+    {
+      "id": "e11",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does Digest authentication react to a 401 challenge and retry the request?",
+      "answers": [
+        {
+          "file": "src/requests/auth.py",
+          "symbol": "HTTPDigestAuth.handle_401"
+        },
+        {
+          "file": "src/requests/auth.py",
+          "symbol": "HTTPDigestAuth.build_digest_header"
+        },
+        {
+          "file": "src/requests/auth.py",
+          "symbol": "HTTPDigestAuth.init_per_thread_state"
+        }
+      ]
+    },
+    {
+      "id": "e12",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does requests decide what encoding to use when decoding response text?",
+      "answers": [
+        {
+          "file": "src/requests/models.py",
+          "symbol": "Response.text"
+        },
+        {
+          "file": "src/requests/models.py",
+          "symbol": "Response.apparent_encoding"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "get_encoding_from_headers"
+        }
+      ]
+    },
+    {
+      "id": "e13",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How are event hooks registered on a request and then called?",
+      "answers": [
+        {
+          "file": "src/requests/hooks.py",
+          "symbol": "dispatch_hook"
+        },
+        {
+          "file": "src/requests/models.py",
+          "symbol": "RequestHooksMixin.register_hook"
+        },
+        {
+          "file": "src/requests/models.py",
+          "symbol": "PreparedRequest.prepare_hooks"
+        }
+      ]
+    },
+    {
+      "id": "e14",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How is the Content-Length header computed for a request body?",
+      "answers": [
+        {
+          "file": "src/requests/models.py",
+          "symbol": "PreparedRequest.prepare_content_length"
+        },
+        {
+          "file": "src/requests/models.py",
+          "symbol": "PreparedRequest.prepare_body"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "super_len"
+        }
+      ]
+    },
+    {
+      "id": "e15",
+      "repo": "requests",
+      "split": "dev",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How do connection and read timeouts relate to the rest of the exception hierarchy?",
+      "answers": [
+        {
+          "file": "src/requests/exceptions.py",
+          "symbol": "Timeout"
+        },
+        {
+          "file": "src/requests/exceptions.py",
+          "symbol": "ConnectTimeout"
+        },
+        {
+          "file": "src/requests/exceptions.py",
+          "symbol": "ReadTimeout"
+        }
+      ]
+    },
+    {
+      "id": "rl01",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `should_strip_auth` compare to decide whether to drop credentials?",
+      "answers": [
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "SessionRedirectMixin.should_strip_auth"
+        }
+      ]
+    },
+    {
+      "id": "rl02",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `super_len` do when an object exposes a `len` attribute?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "super_len"
+        }
+      ]
+    },
+    {
+      "id": "rl03",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What is `CaseInsensitiveDict.lower_items` for?",
+      "answers": [
+        {
+          "file": "src/requests/structures.py",
+          "symbol": "CaseInsensitiveDict.lower_items"
+        }
+      ]
+    },
+    {
+      "id": "rl04",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `unquote_unreserved` do to percent-encoded characters?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "unquote_unreserved"
+        }
+      ]
+    },
+    {
+      "id": "rl05",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `requote_uri` do?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "requote_uri"
+        }
+      ]
+    },
+    {
+      "id": "rl06",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `prepend_scheme_if_needed` do?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "prepend_scheme_if_needed"
+        }
+      ]
+    },
+    {
+      "id": "rl07",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `guess_json_utf` detect?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "guess_json_utf"
+        }
+      ]
+    },
+    {
+      "id": "rl08",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `check_header_validity` reject?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "check_header_validity"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "_validate_header_part"
+        }
+      ]
+    },
+    {
+      "id": "rl09",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `morsel_to_cookie` convert between?",
+      "answers": [
+        {
+          "file": "src/requests/cookies.py",
+          "symbol": "morsel_to_cookie"
+        }
+      ]
+    },
+    {
+      "id": "rl10",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `dispatch_hook` do with a list of hooks?",
+      "answers": [
+        {
+          "file": "src/requests/hooks.py",
+          "symbol": "dispatch_hook"
+        }
+      ]
+    },
+    {
+      "id": "rl11",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `extract_zipped_paths` handle?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "extract_zipped_paths"
+        }
+      ]
+    },
+    {
+      "id": "rl12",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `is_valid_cidr` validate?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "is_valid_cidr"
+        }
+      ]
+    },
+    {
+      "id": "rl13",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `address_in_network` compute?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "address_in_network"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "dotted_netmask"
+        }
+      ]
+    },
+    {
+      "id": "rl14",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `to_native_string` do?",
+      "answers": [
+        {
+          "file": "src/requests/_internal_utils.py",
+          "symbol": "to_native_string"
+        }
+      ]
+    },
+    {
+      "id": "rl15",
+      "repo": "requests",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `HTTPAdapter.cert_verify` do?",
+      "answers": [
+        {
+          "file": "src/requests/adapters.py",
+          "symbol": "HTTPAdapter.cert_verify"
+        }
+      ]
+    },
+    {
+      "id": "rs01",
+      "repo": "requests",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does a Response decide whether it represents a redirect?",
+      "answers": [
+        {
+          "file": "src/requests/models.py",
+          "symbol": "Response.is_redirect"
+        },
+        {
+          "file": "src/requests/models.py",
+          "symbol": "Response.is_permanent_redirect"
+        }
+      ]
+    },
+    {
+      "id": "rs02",
+      "repo": "requests",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "What makes a response object truthy or falsy in a boolean test?",
+      "answers": [
+        {
+          "file": "src/requests/models.py",
+          "symbol": "Response.__bool__"
+        },
+        {
+          "file": "src/requests/models.py",
+          "symbol": "Response.ok"
+        }
+      ]
+    },
+    {
+      "id": "rs03",
+      "repo": "requests",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How are proxy settings discovered from the environment?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "get_environ_proxies"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "should_bypass_proxies"
+        }
+      ]
+    },
+    {
+      "id": "rs04",
+      "repo": "requests",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How is a session shut down and its adapters released?",
+      "answers": [
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "Session.close"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "symbol": "Session.__exit__"
+        }
+      ]
+    },
+    {
+      "id": "rs05",
+      "repo": "requests",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How are credentials pulled out of a URL that embeds them?",
+      "answers": [
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "get_auth_from_url"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "symbol": "urldefragauth"
+        }
+      ]
+    },
+    {
+      "id": "cs01",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does click turn raw command line arguments into parameter values?",
+      "answers": [
+        {
+          "file": "src/click/parser.py",
+          "symbol": "_OptionParser.parse_args"
+        },
+        {
+          "file": "src/click/core.py",
+          "symbol": "Command.parse_args"
+        }
+      ]
+    },
+    {
+      "id": "cs02",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does a group find and dispatch to one of its subcommands?",
+      "answers": [
+        {
+          "file": "src/click/core.py",
+          "symbol": "Group.resolve_command"
+        },
+        {
+          "file": "src/click/core.py",
+          "symbol": "Group.invoke"
+        },
+        {
+          "file": "src/click/core.py",
+          "symbol": "Group.get_command"
+        }
+      ]
+    },
+    {
+      "id": "cs03",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does click ask the user interactively for a value it was not given?",
+      "answers": [
+        {
+          "file": "src/click/core.py",
+          "symbol": "Option.prompt_for_value"
+        },
+        {
+          "file": "src/click/termui.py",
+          "symbol": "prompt"
+        }
+      ]
+    },
+    {
+      "id": "cs04",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How is the default value for a parameter worked out?",
+      "answers": [
+        {
+          "file": "src/click/core.py",
+          "symbol": "Parameter.get_default"
+        },
+        {
+          "file": "src/click/core.py",
+          "symbol": "Context.lookup_default"
+        }
+      ]
+    },
+    {
+      "id": "cs05",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does a parameter take its value from an environment variable?",
+      "answers": [
+        {
+          "file": "src/click/core.py",
+          "symbol": "Parameter.resolve_envvar_value"
+        },
+        {
+          "file": "src/click/core.py",
+          "symbol": "Parameter.value_from_envvar"
+        }
+      ]
+    },
+    {
+      "id": "cs06",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How is the help page for a command assembled?",
+      "answers": [
+        {
+          "file": "src/click/core.py",
+          "symbol": "Command.format_help"
+        },
+        {
+          "file": "src/click/core.py",
+          "symbol": "Command.format_options"
+        },
+        {
+          "file": "src/click/formatting.py",
+          "symbol": "HelpFormatter.write_dl"
+        }
+      ]
+    },
+    {
+      "id": "cs07",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How is a string from the command line converted to the declared type?",
+      "answers": [
+        {
+          "file": "src/click/core.py",
+          "symbol": "Parameter.type_cast_value"
+        },
+        {
+          "file": "src/click/types.py",
+          "symbol": "ParamType.convert"
+        }
+      ]
+    },
+    {
+      "id": "cs08",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does click keep track of which command context is currently active?",
+      "answers": [
+        {
+          "file": "src/click/globals.py",
+          "symbol": "push_context"
+        },
+        {
+          "file": "src/click/globals.py",
+          "symbol": "pop_context"
+        },
+        {
+          "file": "src/click/globals.py",
+          "symbol": "get_current_context"
+        }
+      ]
+    },
+    {
+      "id": "cs09",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How are shell completion suggestions produced?",
+      "answers": [
+        {
+          "file": "src/click/shell_completion.py",
+          "symbol": "ShellComplete.get_completions"
+        },
+        {
+          "file": "src/click/shell_completion.py",
+          "symbol": "shell_complete"
+        }
+      ]
+    },
+    {
+      "id": "cs10",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does the test helper capture the output of an invoked command?",
+      "answers": [
+        {
+          "file": "src/click/testing.py",
+          "symbol": "CliRunner.invoke"
+        },
+        {
+          "file": "src/click/testing.py",
+          "symbol": "CliRunner.isolation"
+        }
+      ]
+    },
+    {
+      "id": "cs11",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "What happens when a required parameter is not supplied?",
+      "answers": [
+        {
+          "file": "src/click/core.py",
+          "symbol": "Parameter.value_is_missing"
+        },
+        {
+          "file": "src/click/core.py",
+          "symbol": "Parameter.process_value"
+        },
+        {
+          "file": "src/click/exceptions.py",
+          "symbol": "MissingParameter"
+        }
+      ]
+    },
+    {
+      "id": "cs12",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How are usage errors displayed back to the user?",
+      "answers": [
+        {
+          "file": "src/click/exceptions.py",
+          "symbol": "ClickException.show"
+        },
+        {
+          "file": "src/click/exceptions.py",
+          "symbol": "UsageError.show"
+        }
+      ]
+    },
+    {
+      "id": "cs13",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How is long help text wrapped to the terminal width?",
+      "answers": [
+        {
+          "file": "src/click/formatting.py",
+          "symbol": "wrap_text"
+        },
+        {
+          "file": "src/click/formatting.py",
+          "symbol": "HelpFormatter.write_text"
+        }
+      ]
+    },
+    {
+      "id": "cs14",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "How does decorating a function turn it into a runnable command?",
+      "answers": [
+        {
+          "file": "src/click/decorators.py",
+          "symbol": "command"
+        },
+        {
+          "file": "src/click/core.py",
+          "symbol": "Command.__init__"
+        }
+      ]
+    },
+    {
+      "id": "cs15",
+      "repo": "click",
+      "split": "test",
+      "kind": "explanatory",
+      "style": "semantic",
+      "question": "In what order are parameters processed when a command runs?",
+      "answers": [
+        {
+          "file": "src/click/core.py",
+          "symbol": "iter_params_for_processing"
+        },
+        {
+          "file": "src/click/core.py",
+          "symbol": "Parameter.handle_parse_result"
+        }
+      ]
+    },
+    {
+      "id": "cl01",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `_split_opt` return?",
+      "answers": [
+        {
+          "file": "src/click/parser.py",
+          "symbol": "_split_opt"
+        }
+      ]
+    },
+    {
+      "id": "cl02",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `_normalize_opt` do?",
+      "answers": [
+        {
+          "file": "src/click/parser.py",
+          "symbol": "_normalize_opt"
+        }
+      ]
+    },
+    {
+      "id": "cl03",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `make_pass_decorator` create?",
+      "answers": [
+        {
+          "file": "src/click/decorators.py",
+          "symbol": "make_pass_decorator"
+        }
+      ]
+    },
+    {
+      "id": "cl04",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `Context.ensure_object` do?",
+      "answers": [
+        {
+          "file": "src/click/core.py",
+          "symbol": "Context.ensure_object"
+        }
+      ]
+    },
+    {
+      "id": "cl05",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `Choice.normalize_choice` handle?",
+      "answers": [
+        {
+          "file": "src/click/types.py",
+          "symbol": "Choice.normalize_choice"
+        }
+      ]
+    },
+    {
+      "id": "cl06",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `measure_table` compute?",
+      "answers": [
+        {
+          "file": "src/click/formatting.py",
+          "symbol": "measure_table"
+        }
+      ]
+    },
+    {
+      "id": "cl07",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `split_arg_string` do?",
+      "answers": [
+        {
+          "file": "src/click/shell_completion.py",
+          "symbol": "split_arg_string"
+        }
+      ]
+    },
+    {
+      "id": "cl08",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `_posixify` do to a string?",
+      "answers": [
+        {
+          "file": "src/click/utils.py",
+          "symbol": "_posixify"
+        }
+      ]
+    },
+    {
+      "id": "cl09",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `get_app_dir` return?",
+      "answers": [
+        {
+          "file": "src/click/utils.py",
+          "symbol": "get_app_dir"
+        }
+      ]
+    },
+    {
+      "id": "cl10",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `format_filename` do?",
+      "answers": [
+        {
+          "file": "src/click/utils.py",
+          "symbol": "format_filename"
+        }
+      ]
+    },
+    {
+      "id": "cl11",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `augment_usage_errors` do?",
+      "answers": [
+        {
+          "file": "src/click/core.py",
+          "symbol": "augment_usage_errors"
+        }
+      ]
+    },
+    {
+      "id": "cl12",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `_detect_program_name` return?",
+      "answers": [
+        {
+          "file": "src/click/utils.py",
+          "symbol": "_detect_program_name"
+        }
+      ]
+    },
+    {
+      "id": "cl13",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `Option._parse_decls` produce?",
+      "answers": [
+        {
+          "file": "src/click/core.py",
+          "symbol": "Option._parse_decls"
+        }
+      ]
+    },
+    {
+      "id": "cl14",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `echo_via_pager` do?",
+      "answers": [
+        {
+          "file": "src/click/termui.py",
+          "symbol": "echo_via_pager"
+        }
+      ]
+    },
+    {
+      "id": "cl15",
+      "repo": "click",
+      "split": "test",
+      "kind": "factual",
+      "style": "lexical",
+      "question": "What does `_expand_args` handle?",
+      "answers": [
+        {
+          "file": "src/click/utils.py",
+          "symbol": "_expand_args"
+        }
+      ]
+    }
+  ]
+}

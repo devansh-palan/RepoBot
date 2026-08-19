@@ -1,0 +1,17 @@
+# Environments and caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# All local data: cloned repos, vector store, BM25 pickles, embedding cache,
+# and eval run outputs. Everything here is rebuilt by indexing/eval runs.
+data/
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
