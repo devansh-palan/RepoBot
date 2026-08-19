@@ -7,7 +7,11 @@ independently callable so the ablation can show what fusion actually buys.
 from src.index import SearchResult
 
 from .fusion import reciprocal_rank_fusion
-from .rerank import rerank
+# NOTE: the rerank *function* is deliberately not re-exported: `from .rerank
+# import rerank` here would shadow the `src.retrieve.rerank` submodule with
+# the function (the same module/attribute collision that forced serve's
+# app.py -> api.py rename), breaking attribute-path imports and patching.
+# Callers use hybrid_rerank_search, or import from src.retrieve.rerank.
 from .retrievers import (
     RETRIEVERS,
     MissingIndexError,
@@ -27,6 +31,5 @@ __all__ = [
     "hybrid_search",
     "load_bm25",
     "reciprocal_rank_fusion",
-    "rerank",
     "vector_search",
 ]

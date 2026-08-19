@@ -378,7 +378,7 @@ def test_rerank_reorders_by_cross_encoder_score(monkeypatch: pytest.MonkeyPatch)
 
 
 def test_rerank_of_nothing_is_nothing() -> None:
-    from src.retrieve import rerank
+    from src.retrieve.rerank import rerank
 
     assert rerank("q", [], top_k=5) == []
 
