@@ -189,12 +189,16 @@ BM25_STOPWORDS: frozenset[str] = frozenset({
     "why", "will", "with", "would", "you", "your",
 })
 
-# Cross-encoder reranking. The bi-encoder above embeds question and code
-# separately and can only compare the two blurs; a cross-encoder reads them
-# *together* and scores the actual pair, which is where multi-part explanatory
-# questions — the weakest slice at R@5 ~0.5 — stand to gain. It runs over a
-# wider candidate pool than the final k precisely because fusion's ordering is
-# what it exists to correct.
+# Cross-encoder reranking — available as the "hybrid_rerank" retriever but NOT
+# the default, because it lost on measurement. A cross-encoder reads question
+# and chunk together and should beat separate embeddings, but both general-
+# purpose rerankers *regressed* on code (held-out test MRR vs hybrid's 0.821):
+#   cross-encoder/ms-marco-MiniLM-L-6-v2  0.792  (+0.5s/query)
+#   BAAI/bge-reranker-base                0.730  (+7.5s/query on CPU)
+# They are trained on web prose; retrieval-tuned code embeddings plus BM25
+# already encode more of what a code query needs. Revisit only with a
+# code-trained reranker, and re-run `python -m src.eval --score` before
+# believing it.
 RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 RERANK_CANDIDATES: int = 30  # pool handed to the cross-encoder
 

@@ -356,6 +356,43 @@ def test_a_lexical_query_gets_bm25_at_full_weight(repo: Path, indexed: dict) -> 
     assert any("bm25" in r.contributions for r in hybrid)
 
 
+# --------------------------------------------------------------------------
+# Cross-encoder reranking (model mocked — an 80MB download has no place in CI)
+# --------------------------------------------------------------------------
+
+
+def test_rerank_reorders_by_cross_encoder_score(monkeypatch: pytest.MonkeyPatch) -> None:
+    import src.retrieve.rerank as rerank_module
+
+    class Scripted:
+        def predict(self, pairs):
+            # Score by how late the chunk's symbol is in the alphabet, so the
+            # incoming order is provably discarded.
+            return [ord(p[1].split()[-2][0]) for p in pairs]
+
+    monkeypatch.setattr(rerank_module, "load_reranker", lambda: Scripted())
+    results = rerank_module.rerank("q", _ranking("alpha", "beta", "gamma"), top_k=2)
+
+    assert [r.chunk.symbol for r in results] == ["gamma", "beta"]
+    assert [r.rank for r in results] == [1, 2]
+
+
+def test_rerank_of_nothing_is_nothing() -> None:
+    from src.retrieve import rerank
+
+    assert rerank("q", [], top_k=5) == []
+
+
+def test_the_reranked_retriever_is_separately_callable() -> None:
+    """Registered like the others so the ablation can measure it — measurement
+    is exactly how it was found to lose to plain hybrid and kept off the
+    default path (see RERANKER_MODEL in config)."""
+    from src.retrieve import RETRIEVERS, hybrid_rerank_search
+
+    assert RETRIEVERS["hybrid_rerank"] is hybrid_rerank_search
+    assert RETRIEVERS["hybrid"] is hybrid_search, "the default stays un-reranked"
+
+
 def test_fusion_weights_scale_votes() -> None:
     """Two retrievers disagree; the weighted one wins the fused ranking."""
     a, b = _ranking("alpha", "beta"), _ranking("beta", "alpha")
