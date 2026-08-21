@@ -89,7 +89,10 @@ def test_cache_key_cannot_alias_across_the_separator() -> None:
     assert cache_key("c", "ab") != cache_key("bc", "a")
 
 
-def test_cache_round_trips(tmp_path: Path) -> None:
+def test_cache_round_trips(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # save_cache keeps only vectors of the active model's dimension, so the
+    # test pins the dimension it writes.
+    monkeypatch.setattr(config, "EMBEDDING_DIM", 4)
     path = tmp_path / "c.npz"
     original = {"k1": np.ones(4, dtype=np.float32), "k2": np.zeros(4, dtype=np.float32)}
     save_cache(path, original)
@@ -357,3 +360,29 @@ def test_search_on_an_empty_collection_returns_nothing(tmp_path: Path) -> None:
     empty = tmp_path / "empty_repo"
     empty.mkdir()
     assert search(get_collection(empty, str(tmp_path / "chroma")), "anything") == []
+
+
+def test_saving_a_cache_with_mixed_dimensions_keeps_only_the_active_models(
+    tmp_path, monkeypatch
+) -> None:
+    """After an embedding-model swap the loaded cache holds two vector widths;
+    stacking them crashed a real re-index. The stale width is dropped — a
+    cache serves the current model, and a swap-back just re-embeds."""
+    import numpy as np
+
+    from src import config as cfg
+    from src.index import load_cache, save_cache
+
+    monkeypatch.setattr(cfg, "EMBEDDING_DIM", 4)
+    mixed = {
+        "new-a": np.ones(4, dtype=np.float32),
+        "old-b": np.ones(8, dtype=np.float32),
+        "new-c": np.zeros(4, dtype=np.float32),
+    }
+    save_cache(tmp_path / "c.npz", mixed)
+
+    back = load_cache(tmp_path / "c.npz")
+    assert set(back) == {"new-a", "new-c"}
+    assert all(v.shape == (4,) for v in back.values())
+
+

@@ -68,7 +68,12 @@ def save_cache(path: str | Path, cache: dict[str, np.ndarray]) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    keys = list(cache)
+    # The npz format stacks every vector into one matrix, so entries must share
+    # a shape — but after an embedding-model swap the loaded cache holds the
+    # old model's dimension next to the new one's, and stacking them crashed a
+    # real re-index. Keep only the active model's dimension: this is a cache,
+    # not an archive, and a swap-back simply re-embeds.
+    keys = [k for k in cache if cache[k].shape == (config.EMBEDDING_DIM,)]
     if keys:
         vectors = np.stack([cache[key] for key in keys]).astype(np.float32)
     else:

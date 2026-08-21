@@ -5,219 +5,260 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Codebase Q&amp;A + Review</title>
 <style>
-  /* Light palette on :root, dark only overriding tokens, so the page follows
-     the OS setting without a toggle and without a flash of the wrong theme. */
   :root {
-    --bg: #fbfbfa;    --panel: #ffffff;  --ink: #1a1a19;   --muted: #6b6b68;
-    --line: #e4e4e1;  --accent: #2f6f4f; --accent-ink: #ffffff;
-    --code-bg: #f4f4f2;
+    --bg: #f7f7f5;      --panel: #ffffff;  --side: #efefec;
+    --ink: #1a1a19;     --muted: #6b6b68;  --line: #e2e2df;
+    --accent: #2f6f4f;  --accent-ink: #ffffff;
+    --code-bg: #ececea; --user-bg: #e7efe9;
     --blocker: #b3261e; --warning: #a15c00; --suggestion: #2f6f4f; --note: #6b6b68;
-    --radius: 8px;
+    --radius: 10px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #16171a;  --panel: #1e1f23;  --ink: #e8e8e6;  --muted: #9a9a96;
-      --line: #303136; --accent: #6dbb8f; --accent-ink: #10110f;
-      --code-bg: #24262b;
-      --blocker: #f2837b; --warning: #e0a350; --suggestion: #6dbb8f; --note: #9a9a96;
+      --bg: #131417;    --panel: #1b1c20;  --side: #17181c;
+      --ink: #e8e8e6;   --muted: #989894;  --line: #2b2c31;
+      --accent: #6dbb8f; --accent-ink: #10110f;
+      --code-bg: #26272c; --user-bg: #20262a;
+      --blocker: #f2837b; --warning: #e0a350; --suggestion: #6dbb8f; --note: #989894;
     }
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
     font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex; overflow: hidden;
   }
   code, pre, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
-  .wrap { max-width: 940px; margin: 0 auto; padding: 24px 20px 64px; }
+  button { font: inherit; cursor: pointer; }
 
-  header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
-  h1 { font-size: 20px; margin: 0; font-weight: 620; letter-spacing: -0.01em; }
-  .sub { color: var(--muted); font-size: 13px; }
-  #health { margin-left: auto; font-size: 12px; color: var(--muted); }
-  #health b { color: var(--ink); font-weight: 560; }
-
-  .tabs { display: flex; gap: 4px; margin: 20px 0 14px; border-bottom: 1px solid var(--line); }
-  .tab {
-    padding: 8px 14px; border: 0; background: none; color: var(--muted);
-    font: inherit; font-size: 14px; cursor: pointer; border-bottom: 2px solid transparent;
+  /* ── sidebar ─────────────────────────────────────────────────────── */
+  aside {
+    width: 280px; flex: 0 0 280px; background: var(--side);
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; min-height: 0;
   }
-  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 560; }
+  .brand { padding: 18px 16px 10px; }
+  .brand h1 { font-size: 16px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+  .brand .sub { color: var(--muted); font-size: 12px; }
 
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
-  .panel + .panel { margin-top: 14px; }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
-  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-  input, select, textarea {
-    width: 100%; padding: 8px 10px; font: inherit; color: var(--ink);
-    background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+  .addbox { padding: 8px 12px 14px; border-bottom: 1px solid var(--line); }
+  .addbox input {
+    width: 100%; padding: 9px 11px; font: inherit; font-size: 13.5px;
+    color: var(--ink); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 8px;
   }
-  textarea { min-height: 150px; resize: vertical; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
-  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-  button.go {
-    padding: 9px 18px; border: 0; border-radius: 6px; cursor: pointer;
-    background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 560;
+  .addbox input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .addbox button {
+    width: 100%; margin-top: 8px; padding: 8px; border: 0; border-radius: 8px;
+    background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 13.5px;
   }
-  button.go[disabled] { opacity: .5; cursor: default; }
-  .grow { flex: 1 1 280px; }
+  .addbox button[disabled] { opacity: .5; cursor: default; }
 
+  #repoList { flex: 1; overflow-y: auto; padding: 8px; }
+  .repo {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 2px;
+    border: 0; border-radius: 8px; background: none; color: var(--ink); font-size: 13.5px;
+  }
+  .repo:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .repo.active { background: var(--panel); font-weight: 600;
+                 box-shadow: inset 0 0 0 1px var(--line); }
+  .repo .dot { width: 7px; height: 7px; border-radius: 99px; flex: 0 0 7px; background: var(--accent); }
+  .repo.pending .dot { background: var(--warning); }
+  .repo .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .side-foot { padding: 10px 16px; border-top: 1px solid var(--line);
+               font-size: 12px; color: var(--muted); }
+  .side-foot a { color: var(--muted); }
+  .side-foot .row2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  #reviewLink { background: none; border: 0; color: var(--muted); font-size: 12px;
+                text-decoration: underline; padding: 0; }
+
+  /* ── main ────────────────────────────────────────────────────────── */
+  main { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 22px; border-bottom: 1px solid var(--line); background: var(--panel);
+  }
+  #currentRepo { font-weight: 650; font-size: 14.5px; overflow: hidden;
+                 text-overflow: ellipsis; white-space: nowrap; }
+  .topbar .spacer { flex: 1; }
+  #clearChat { background: none; border: 1px solid var(--line); border-radius: 7px;
+               color: var(--muted); font-size: 12px; padding: 4px 10px; }
+  #clearChat:hover { color: var(--ink); }
+
+  #scroller { flex: 1; overflow-y: auto; min-height: 0; }
+  #chat, #idxCard, #welcome { max-width: 780px; margin: 0 auto; padding: 18px 22px 8px; }
+
+  #welcome { color: var(--muted); font-size: 14px; padding-top: 48px; text-align: center; }
+  #welcome b { color: var(--ink); }
+
+  .turn { margin: 0 0 18px; }
+  .turn.q .bubble {
+    background: var(--user-bg); border-radius: var(--radius);
+    padding: 10px 14px; display: inline-block; max-width: 92%; font-weight: 550;
+  }
+  .turn.a .bubble { padding: 2px 0; }
   .answer { white-space: pre-wrap; word-wrap: break-word; }
   .answer code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
-  .cursor { display: inline-block; width: 7px; height: 1em; background: var(--accent);
-            vertical-align: -2px; animation: blink 1s steps(2) infinite; }
-  @keyframes blink { 50% { opacity: 0; } }
 
-  /* chat */
-  #chat:empty { display: none; }
-  .turn { padding: 12px 0; border-bottom: 1px solid var(--line); }
-  .turn:last-child { border-bottom: 0; }
-  .turn .who { font-size: 11px; color: var(--muted); text-transform: uppercase;
-               letter-spacing: .05em; margin-bottom: 3px; }
-  .turn.q .body { font-weight: 560; }
-  .turn .meta { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap;
-                margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .status { display: flex; align-items: center; gap: 8px; color: var(--muted);
+            font-size: 13px; padding: 4px 0; }
+  .status .spin {
+    width: 12px; height: 12px; flex: 0 0 12px; border-radius: 99px;
+    border: 2px solid var(--line); border-top-color: var(--accent);
+    animation: rot 0.9s linear infinite;
+  }
+  @keyframes rot { to { transform: rotate(360deg); } }
 
-  .metrics { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 16px;
-             padding-top: 14px; border-top: 1px solid var(--line); }
-  .metric .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-  .metric .v { font-size: 17px; font-weight: 560; font-variant-numeric: tabular-nums; }
-
-  details.sources { margin-top: 8px; }
-  details.sources summary { cursor: pointer; color: var(--muted); font-size: 13px; }
-  .src { display: flex; gap: 10px; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--line); }
-  .src .loc { color: var(--accent); }
-  .src .sym { color: var(--muted); }
-
-  .stages { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
-  .stages div { padding: 2px 0; }
-
+  .meta { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap;
+          margin-top: 8px; font-size: 12px; color: var(--muted); }
   .badge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 11px;
-           font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+           font-weight: 650; text-transform: uppercase; letter-spacing: .03em; }
   .ok { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
   .bad { background: color-mix(in srgb, var(--blocker) 18%, transparent); color: var(--blocker); }
 
-  .comment { padding: 11px 0; border-bottom: 1px solid var(--line); }
+  details.sources { margin-top: 6px; }
+  details.sources summary { cursor: pointer; color: var(--muted); font-size: 12.5px; }
+  .src { display: flex; gap: 10px; padding: 4px 0; font-size: 12.5px; border-bottom: 1px solid var(--line); }
+  .src .loc { color: var(--accent); }
+  .src .sym { color: var(--muted); }
+
+  .err { color: var(--blocker); background: color-mix(in srgb, var(--blocker) 10%, transparent);
+         padding: 9px 12px; border-radius: 8px; margin-top: 8px; font-size: 13.5px; }
+
+  /* indexing card */
+  #idxCard .card { background: var(--panel); border: 1px solid var(--line);
+                   border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; }
+  #idxCard .lines { font-size: 12.5px; color: var(--muted); }
+  #idxCard .lines div { padding: 1px 0; }
+
+  /* composer */
+  .composer { border-top: 1px solid var(--line); background: var(--panel); }
+  .composer .inner { max-width: 780px; margin: 0 auto; padding: 14px 22px 18px;
+                     display: flex; gap: 10px; }
+  .composer input {
+    flex: 1; padding: 12px 14px; font: inherit; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 12px;
+  }
+  .composer input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .composer button {
+    padding: 0 22px; border: 0; border-radius: 12px;
+    background: var(--accent); color: var(--accent-ink); font-weight: 650;
+  }
+  .composer button[disabled] { opacity: .45; cursor: default; }
+
+  /* review view */
+  #reviewView { max-width: 780px; margin: 0 auto; padding: 18px 22px; width: 100%; }
+  #reviewView textarea {
+    width: 100%; min-height: 180px; resize: vertical; margin-top: 8px;
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px;
+    color: var(--ink); background: var(--panel); border: 1px solid var(--line);
+    border-radius: 8px; padding: 10px;
+  }
+  #reviewView .go { margin-top: 10px; padding: 9px 18px; border: 0; border-radius: 8px;
+                    background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .comment { padding: 10px 0; border-bottom: 1px solid var(--line); }
   .comment .head { display: flex; gap: 10px; align-items: baseline; font-size: 13px; }
-  .comment .sev { font-weight: 660; text-transform: uppercase; font-size: 11px; letter-spacing: .04em; }
+  .comment .sev { font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: .04em; }
   .sev-blocker { color: var(--blocker); } .sev-warning { color: var(--warning); }
   .sev-suggestion { color: var(--suggestion); } .sev-note { color: var(--note); }
   .comment .msg { margin-top: 3px; }
 
-  .err { color: var(--blocker); background: color-mix(in srgb, var(--blocker) 10%, transparent);
-         padding: 10px 12px; border-radius: 6px; margin-top: 14px; font-size: 14px; }
-  .hint { color: var(--muted); font-size: 12.5px; margin-top: 8px; }
-  .hidden { display: none; }
-  .out { margin-top: 18px; }
+  .hidden { display: none !important; }
+
+  @media (max-width: 720px) {
+    aside { position: absolute; z-index: 10; height: 100%; transform: translateX(-100%);
+            transition: transform .15s; }
+    aside.open { transform: none; }
+    #menuBtn { display: inline-block; }
+  }
+  #menuBtn { display: none; background: none; border: 1px solid var(--line);
+             border-radius: 7px; color: var(--muted); padding: 3px 10px; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Codebase Q&amp;A</h1>
-    <span class="sub">pick a repository, then chat about its code</span>
-    <span id="health">checking…</span>
-  </header>
 
-  <div class="tabs" role="tablist">
-    <button class="tab" role="tab" aria-selected="true" data-tab="ask">Ask</button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="review">Review a diff</button>
+<aside id="sidebar">
+  <div class="brand">
+    <h1>Codebase Q&amp;A</h1>
+    <div class="sub">chat with any GitHub repository</div>
+  </div>
+  <div class="addbox">
+    <input id="repoNew" placeholder="owner/repo  e.g. psf/requests" spellcheck="false">
+    <button id="loadBtn">+ Add repository</button>
+  </div>
+  <div id="repoList"></div>
+  <div class="side-foot">
+    <div class="row2">
+      <span id="health">checking…</span>
+      <button id="reviewLink">Review a diff</button>
+    </div>
+  </div>
+</aside>
+
+<main>
+  <div class="topbar">
+    <button id="menuBtn">☰</button>
+    <span id="currentRepo">No repository selected</span>
+    <span class="spacer"></span>
+    <button id="clearChat" class="hidden">New chat</button>
   </div>
 
-  <!-- ── Ask ─────────────────────────────────────────────────────────── -->
-  <section id="tab-ask">
-    <div class="panel">
-      <div class="row">
-        <div class="grow">
-          <label for="repoSel">Repository</label>
-          <select id="repoSel"><option value="">— none loaded yet —</option></select>
-        </div>
-        <div class="grow">
-          <label for="repoNew">Add from GitHub</label>
-          <input id="repoNew" placeholder="owner/repo   e.g. psf/requests" spellcheck="false">
-        </div>
-        <button class="go" id="loadBtn">Load &amp; index</button>
-      </div>
-      <div id="idxProgress" class="stages hidden"></div>
+  <div id="scroller">
+    <div id="idxCard" class="hidden"><div class="card">
+      <b style="font-size:13.5px" id="idxTitle">Indexing…</b>
+      <div class="lines" id="idxLines"></div>
       <div id="idxErr" class="err hidden"></div>
-      <div class="hint" id="repoHint">Paste a GitHub repository above — it is cloned and
-        indexed once, then you can ask anything about its code.</div>
+    </div></div>
+
+    <div id="welcome">
+      <p><b>Pick a repository</b> on the left, or paste a GitHub repo to add one.<br>
+      It is cloned and indexed once — then ask anything about its code.<br>
+      Every answer is checked against the retrieved source before you see a verdict.</p>
     </div>
 
-    <div class="panel">
-      <div id="chat"></div>
-      <div class="row" style="margin-top:4px">
-        <div class="grow">
-          <label for="q">Your question</label>
-          <input id="q" placeholder="How are redirects followed?" spellcheck="false">
-        </div>
-        <button class="go" id="askBtn" disabled>Ask</button>
-      </div>
-      <div id="askErr" class="err hidden"></div>
-    </div>
-  </section>
+    <div id="chat"></div>
 
-  <!-- ── Review ──────────────────────────────────────────────────────── -->
-  <section id="tab-review" class="hidden">
-    <div class="panel">
-      <div class="row">
-        <div class="grow">
-          <label for="rrepo">Repository</label>
-          <select id="rrepo"><option value="">— load one on the Ask tab —</option></select>
-        </div>
-        <div style="flex:0 0 110px">
-          <label for="maxh">Max hunks</label>
-          <input id="maxh" type="number" value="5" min="1" max="200">
-        </div>
-        <button class="go" id="revBtn">Review</button>
-      </div>
-      <div style="margin-top:10px">
-        <label for="diff">Unified diff</label>
-        <textarea id="diff" spellcheck="false"
-          placeholder="git diff main... | clip   then paste here"></textarea>
-      </div>
+    <div id="reviewView" class="hidden">
+      <b>Review a diff against <span id="revRepoName">the selected repo</span></b>
+      <textarea id="diff" spellcheck="false" placeholder="Paste a unified diff (git diff main...)"></textarea>
+      <button class="go" id="revBtn">Review</button>
+      <div id="revSummary" style="margin-top:12px;color:var(--muted);font-size:13px"></div>
+      <div id="revErr" class="err hidden"></div>
+      <div id="comments"></div>
     </div>
+  </div>
 
-    <div class="out hidden" id="revOut">
-      <div class="panel">
-        <div id="revSummary" class="sub"></div>
-        <div id="revErr" class="err hidden"></div>
-        <div id="comments"></div>
-        <div class="metrics hidden" id="revMetrics"></div>
-      </div>
+  <div class="composer" id="composer">
+    <div class="inner">
+      <input id="q" placeholder="Ask about this codebase…" spellcheck="false" disabled>
+      <button id="askBtn" disabled>Ask</button>
     </div>
-  </section>
-</div>
+  </div>
+</main>
 
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-// Render `backticked` spans as code without pulling in a markdown library —
-// citations are the main thing worth highlighting and they are always backticked.
 const inlineCode = (s) => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
 
-// ── tabs ──────────────────────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.onclick = () => {
-    document.querySelectorAll('.tab').forEach(t =>
-      t.setAttribute('aria-selected', String(t === tab)));
-    $('tab-ask').classList.toggle('hidden', tab.dataset.tab !== 'ask');
-    $('tab-review').classList.toggle('hidden', tab.dataset.tab !== 'review');
-  };
-});
+// ── state ─────────────────────────────────────────────────────────────
+let repos = [];
+let current = localStorage.getItem('repo.current') || '';
 
-// ── health ────────────────────────────────────────────────────────────
-fetch('/health').then(r => r.json()).then(h => {
-  $('health').innerHTML = `${h.provider} · <b>${esc(h.model || '—')}</b>`;
-}).catch(() => { $('health').textContent = 'service unreachable'; });
+const historyKey = (path) => 'chat:' + path;
+const loadHistory = (path) => { try { return JSON.parse(localStorage.getItem(historyKey(path))) || []; } catch { return []; } };
+const saveHistory = (path, turns) => localStorage.setItem(historyKey(path), JSON.stringify(turns.slice(-50)));
 
-// ── SSE over POST: fetch + a manual frame parser (EventSource is GET-only)
+// ── SSE over POST (EventSource is GET-only) ───────────────────────────
 async function sse(url, body, onEvent) {
   const res = await fetch(url, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(body),
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 300)}`);
-
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
@@ -225,8 +266,6 @@ async function sse(url, body, onEvent) {
     const {done, value} = await reader.read();
     if (done) break;
     buffer += decoder.decode(value, {stream: true});
-    // Frames are separated by a blank line; anything after the last separator
-    // is a partial frame and stays in the buffer.
     const frames = buffer.split('\n\n');
     buffer = frames.pop();
     for (const frame of frames) {
@@ -237,192 +276,228 @@ async function sse(url, body, onEvent) {
   }
 }
 
-// ── repositories ──────────────────────────────────────────────────────
-function currentRepo() { return $('repoSel').value; }
+// ── health ────────────────────────────────────────────────────────────
+fetch('/health').then(r => r.json()).then(h => {
+  $('health').textContent = h.model || h.provider;
+}).catch(() => { $('health').textContent = 'service unreachable'; });
 
-function refreshAskState() {
-  const opt = $('repoSel').selectedOptions[0];
-  const ready = Boolean(opt && opt.value && opt.dataset.indexed === 'true');
-  $('askBtn').disabled = !ready;
-  if (opt && opt.value && ready) $('rrepo').value = opt.value;
-  $('repoHint').classList.toggle('hidden', ready);
-  $('repoHint').textContent = (opt && opt.value && !ready)
-    ? 'This repository is cloned but not indexed yet — press "Load & index".'
-    : 'Paste a GitHub repository above — it is cloned and indexed once, then you can ask anything about its code.';
+// ── sidebar ───────────────────────────────────────────────────────────
+async function refreshRepos(selectPath) {
+  try { repos = (await (await fetch('/repos')).json()).repos; } catch { repos = []; }
+  const list = $('repoList');
+  list.innerHTML = repos.map(r => `
+    <button class="repo ${r.path === current ? 'active' : ''} ${r.indexed ? '' : 'pending'}"
+            data-path="${esc(r.path)}" data-indexed="${r.indexed}">
+      <span class="dot"></span><span class="name">${esc(r.name)}</span>
+    </button>`).join('');
+  list.querySelectorAll('.repo').forEach(b => b.onclick = () => selectRepo(b.dataset.path));
+  if (selectPath) selectRepo(selectPath);
+  else if (current && repos.some(r => r.path === current)) selectRepo(current);
 }
 
-async function loadRepoList(selectPath) {
-  try {
-    const data = await (await fetch('/repos')).json();
-    const options = data.repos.map(r =>
-      `<option value="${esc(r.path)}" data-indexed="${r.indexed}">
-         ${esc(r.name)}${r.indexed ? '' : ' (not indexed)'}
-       </option>`).join('');
-    $('repoSel').innerHTML = options || '<option value="">— none loaded yet —</option>';
-    // The review tab reviews the same store; only indexed repos are usable.
-    $('rrepo').innerHTML = data.repos.filter(r => r.indexed).map(r =>
-      `<option value="${esc(r.path)}">${esc(r.name)}</option>`).join('')
-      || '<option value="">— load one on the Ask tab —</option>';
-    if (selectPath) $('repoSel').value = selectPath;
-    refreshAskState();
-  } catch { /* /repos unreachable; the health line already says so */ }
+function selectRepo(path) {
+  current = path;
+  localStorage.setItem('repo.current', path);
+  const repo = repos.find(r => r.path === path);
+  document.querySelectorAll('.repo').forEach(b =>
+    b.classList.toggle('active', b.dataset.path === path));
+
+  $('currentRepo').textContent = repo ? repo.name : 'No repository selected';
+  $('welcome').classList.toggle('hidden', Boolean(repo));
+  $('clearChat').classList.toggle('hidden', !repo);
+  showChatView();
+
+  const ready = Boolean(repo && repo.indexed);
+  $('q').disabled = !ready; $('askBtn').disabled = !ready;
+  $('q').placeholder = !repo ? 'Ask about this codebase…'
+    : (ready ? `Ask about ${repo.name}…` : 'This repo is not indexed yet — press "+ Add repository" with it selected.');
+
+  renderChat();
+  $('sidebar').classList.remove('open');
 }
-$('repoSel').onchange = refreshAskState;
-loadRepoList();
 
-$('loadBtn').onclick = async () => {
-  // Prefer the new-repo input; fall back to re-indexing the selection.
-  const target = $('repoNew').value.trim() || currentRepo();
-  if (!target) return;
-
-  $('loadBtn').disabled = true;
-  $('idxErr').classList.add('hidden');
-  $('idxProgress').classList.remove('hidden');
-  $('idxProgress').innerHTML = '<div>starting…</div>';
-
-  try {
-    await sse('/index', {repo: target}, (ev, data) => {
-      if (ev === 'stage') {
-        $('idxProgress').innerHTML += `<div>${esc(data.detail)}</div>`;
-      } else if (ev === 'done') {
-        $('idxProgress').innerHTML +=
-          `<div><span class="badge ok">ready</span>&nbsp;${esc(data.name)} — ` +
-          `${data.chunks} chunks (${data.embedded} embedded, ${data.cached} cached)</div>`;
-        $('repoNew').value = '';
-        loadRepoList(data.path);
-      } else if (ev === 'error') {
-        $('idxErr').textContent = data.detail;
-        $('idxErr').classList.remove('hidden');
-      }
-    });
-  } catch (e) {
-    $('idxErr').textContent = e.message;
-    $('idxErr').classList.remove('hidden');
-  } finally {
-    $('loadBtn').disabled = false;
-  }
+$('clearChat').onclick = () => {
+  if (current) { localStorage.removeItem(historyKey(current)); renderChat(); }
 };
+$('menuBtn').onclick = () => $('sidebar').classList.toggle('open');
 
-// ── metrics / sources ─────────────────────────────────────────────────
-function metricsLine(m) {
-  const parts = [`${(m.total_ms / 1000).toFixed(1)} s`];
-  if (m.ttft_ms != null) parts.push(`first token ${Math.round(m.ttft_ms)} ms`);
-  parts.push(`${m.input_tokens}/${m.output_tokens} tok`);
-  if (m.tokens_per_second != null) parts.push(`${m.tokens_per_second} tok/s`);
-  return parts.join(' · ');
-}
-
+// ── chat rendering ────────────────────────────────────────────────────
 function sourcesBlock(list) {
   if (!list || !list.length) return '';
   const rows = list.map(s =>
     `<div class="src"><span class="loc mono">${esc(s.location)}</span>
      <span class="sym">${esc(s.kind)} ${esc(s.symbol)}</span></div>`).join('');
-  return `<details class="sources"><summary>${list.length} sources retrieved</summary>${rows}</details>`;
+  return `<details class="sources"><summary>${list.length} sources</summary>${rows}</details>`;
 }
 
-// ── chat ──────────────────────────────────────────────────────────────
-function addTurn(who, cls) {
-  const div = document.createElement('div');
-  div.className = `turn ${cls}`;
-  div.innerHTML = `<div class="who">${who}</div><div class="body"></div>`;
-  $('chat').appendChild(div);
-  div.scrollIntoView({block: 'end'});
-  return div;
+function metaBlock(t) {
+  let badge = '';
+  if (t.grounded === true) badge = '<span class="badge ok">grounded</span>';
+  if (t.grounded === false) badge = '<span class="badge bad">not grounded</span>';
+  const secs = t.seconds ? `${t.seconds}s` : '';
+  return `<div class="meta">${badge}<span>${esc(secs)}</span></div>`;
 }
 
-$('askBtn').onclick = async () => {
-  const question = $('q').value.trim();
-  const repo = currentRepo();
-  if (!question || !repo) return;
+function renderChat() {
+  const chat = $('chat');
+  chat.innerHTML = '';
+  if (!current) return;
+  for (const t of loadHistory(current)) {
+    if (t.role === 'q') {
+      chat.insertAdjacentHTML('beforeend',
+        `<div class="turn q"><div class="bubble">${esc(t.text)}</div></div>`);
+    } else {
+      chat.insertAdjacentHTML('beforeend',
+        `<div class="turn a"><div class="bubble"><div class="answer">${inlineCode(t.text)}</div>
+         ${metaBlock(t)}${sourcesBlock(t.sources)}</div></div>`);
+    }
+  }
+  $('scroller').scrollTop = $('scroller').scrollHeight;
+}
 
-  $('askBtn').disabled = true;
-  $('askErr').classList.add('hidden');
-  $('q').value = '';
-
-  addTurn('you', 'q').querySelector('.body').textContent = question;
-  const turn = addTurn('agent', 'a');
-  const body = turn.querySelector('.body');
-  body.innerHTML = '<span class="answer"></span><span class="cursor"></span>';
-  const answerEl = body.querySelector('.answer');
-  const stagesEl = document.createElement('div');
-  stagesEl.className = 'stages';
-  turn.appendChild(stagesEl);
-
-  let text = '';
+// ── add / index a repository ──────────────────────────────────────────
+$('loadBtn').onclick = async () => {
+  const target = $('repoNew').value.trim() || current;
+  if (!target) return;
+  showChatView();
+  $('loadBtn').disabled = true;
+  $('idxCard').classList.remove('hidden');
+  $('idxTitle').textContent = 'Indexing…';
+  $('idxLines').innerHTML = '';
+  $('idxErr').classList.add('hidden');
   try {
-    // Always the agent: every answer goes through the reflection loop and
-    // carries a grounded/not-grounded verdict.
-    await sse('/ask', {repo, question, mode: 'agent'}, (ev, data) => {
-      if (ev === 'token') {
-        text += data.text;
-        answerEl.innerHTML = inlineCode(text);
-      } else if (ev === 'reset') {
-        // The draft on screen was rejected by reflection; a new attempt is
-        // starting, so clear rather than append.
-        text = '';
-        answerEl.innerHTML = '';
-        stagesEl.innerHTML += `<div>revising the answer (attempt ${data.attempt})…</div>`;
-      } else if (ev === 'stage') {
-        stagesEl.innerHTML += `<div>${esc(data.detail || data.stage)}</div>`;
-      } else if (ev === 'done') {
-        answerEl.innerHTML = inlineCode(data.answer || text);
-        const meta = document.createElement('div');
-        meta.className = 'meta';
-        let badge = '';
-        if (data.grounded !== null && data.grounded !== undefined) {
-          badge = `<span class="badge ${data.grounded ? 'ok' : 'bad'}">
-                     ${data.grounded ? 'grounded' : 'not grounded'}</span>
-                   <span>${data.attempts} attempt(s)</span>`;
-        }
-        meta.innerHTML = `${badge}<span>${esc(metricsLine(data.metrics))}</span>`;
-        turn.appendChild(meta);
-        if (data.sources?.length) {
-          turn.insertAdjacentHTML('beforeend', sourcesBlock(data.sources));
-        }
+    await sse('/index', {repo: target}, (ev, data) => {
+      if (ev === 'stage') $('idxLines').innerHTML += `<div>${esc(data.detail)}</div>`;
+      else if (ev === 'done') {
+        $('idxTitle').textContent = `${data.name} is ready — ${data.chunks} chunks indexed`;
+        $('repoNew').value = '';
+        setTimeout(() => $('idxCard').classList.add('hidden'), 4000);
+        refreshRepos(data.path);
       } else if (ev === 'error') {
-        $('askErr').textContent = data.detail;
-        $('askErr').classList.remove('hidden');
+        $('idxTitle').textContent = 'Indexing failed';
+        $('idxErr').textContent = data.detail;
+        $('idxErr').classList.remove('hidden');
       }
     });
   } catch (e) {
-    $('askErr').textContent = e.message;
-    $('askErr').classList.remove('hidden');
+    $('idxTitle').textContent = 'Indexing failed';
+    $('idxErr').textContent = e.message;
+    $('idxErr').classList.remove('hidden');
+  } finally { $('loadBtn').disabled = false; }
+};
+
+// ── asking ────────────────────────────────────────────────────────────
+// The loop's stages are internal; the user sees one friendly status line
+// that updates in place, never a log.
+const STATUS = {
+  retrieve: 'Searching the codebase…',
+  draft: 'Writing an answer…',
+  reflect: 'Checking the answer against the code…',
+};
+
+$('askBtn').onclick = async () => {
+  const question = $('q').value.trim();
+  if (!question || !current) return;
+  const repoPath = current;
+
+  $('askBtn').disabled = true; $('q').value = '';
+  const chat = $('chat');
+  chat.insertAdjacentHTML('beforeend',
+    `<div class="turn q"><div class="bubble">${esc(question)}</div></div>`);
+
+  const turn = document.createElement('div');
+  turn.className = 'turn a';
+  turn.innerHTML = `<div class="bubble">
+      <div class="status"><span class="spin"></span><span class="stext">Searching the codebase…</span></div>
+      <div class="answer"></div>
+    </div>`;
+  chat.appendChild(turn);
+  $('scroller').scrollTop = $('scroller').scrollHeight;
+
+  const answerEl = turn.querySelector('.answer');
+  const statusEl = turn.querySelector('.status');
+  const stext = turn.querySelector('.stext');
+  const started = performance.now();
+  let text = '', finished = null;
+
+  try {
+    await sse('/ask', {repo: repoPath, question, mode: 'agent'}, (ev, data) => {
+      if (ev === 'token') {
+        text += data.text;
+        answerEl.innerHTML = inlineCode(text);
+        $('scroller').scrollTop = $('scroller').scrollHeight;
+      } else if (ev === 'reset') {
+        text = ''; answerEl.innerHTML = '';
+        stext.textContent = 'Improving the answer…';
+      } else if (ev === 'stage') {
+        if (STATUS[data.stage]) stext.textContent = STATUS[data.stage];
+      } else if (ev === 'done') {
+        finished = {
+          role: 'a', text: data.answer || text,
+          grounded: data.grounded, attempts: data.attempts,
+          seconds: ((performance.now() - started) / 1000).toFixed(1),
+          sources: (data.sources || []).map(s => ({location: s.location, kind: s.kind, symbol: s.symbol})),
+        };
+      } else if (ev === 'error') {
+        answerEl.insertAdjacentHTML('afterend', `<div class="err">${esc(data.detail)}</div>`);
+      }
+    });
+  } catch (e) {
+    answerEl.insertAdjacentHTML('afterend', `<div class="err">${esc(e.message)}</div>`);
   } finally {
-    refreshAskState();
-    turn.querySelectorAll('.cursor').forEach(c => c.remove());
-    turn.scrollIntoView({block: 'end'});
+    statusEl.remove();
+    if (finished) {
+      answerEl.innerHTML = inlineCode(finished.text);
+      answerEl.insertAdjacentHTML('afterend', metaBlock(finished) + sourcesBlock(finished.sources));
+      const turns = loadHistory(repoPath);
+      turns.push({role: 'q', text: question}, finished);
+      saveHistory(repoPath, turns);
+    }
+    $('askBtn').disabled = !current;
+    $('scroller').scrollTop = $('scroller').scrollHeight;
   }
 };
 
-// ── review ────────────────────────────────────────────────────────────
-$('revBtn').onclick = async () => {
-  const btn = $('revBtn');
-  const diff = $('diff').value;
-  if (!diff.trim()) return;
+$('q').addEventListener('keydown', e => { if (e.key === 'Enter') $('askBtn').click(); });
+$('repoNew').addEventListener('keydown', e => { if (e.key === 'Enter') $('loadBtn').click(); });
 
-  btn.disabled = true;
-  $('revOut').classList.remove('hidden');
+// ── review view ───────────────────────────────────────────────────────
+let reviewing = false;
+function showChatView() {
+  reviewing = false;
+  $('reviewView').classList.add('hidden');
+  $('chat').classList.remove('hidden');
+  $('composer').classList.remove('hidden');
+}
+$('reviewLink').onclick = () => {
+  reviewing = !reviewing;
+  $('reviewView').classList.toggle('hidden', !reviewing);
+  $('chat').classList.toggle('hidden', reviewing);
+  $('composer').classList.toggle('hidden', reviewing);
+  $('welcome').classList.add('hidden');
+  const repo = repos.find(r => r.path === current);
+  $('revRepoName').textContent = repo ? repo.name : 'the selected repo';
+  $('sidebar').classList.remove('open');
+};
+
+$('revBtn').onclick = async () => {
+  const diff = $('diff').value;
+  if (!diff.trim() || !current) return;
+  $('revBtn').disabled = true;
   $('revSummary').textContent = 'reviewing…';
   $('comments').innerHTML = '';
   $('revErr').classList.add('hidden');
-  $('revMetrics').classList.add('hidden');
-
   try {
     const res = await fetch('/review', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        repo: $('rrepo').value.trim(), diff, max_hunks: Number($('maxh').value),
-      }),
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({repo: current, diff, max_hunks: 20}),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
-
     const counts = Object.entries(data.by_severity).map(([k, v]) => `${v} ${k}`).join(', ');
     $('revSummary').textContent =
       `${data.comments.length} comments${counts ? ' (' + counts + ')' : ''} over ` +
       `${data.hunks_reviewed} hunks in ${data.files_reviewed} files`;
-
     $('comments').innerHTML = data.comments.length
       ? data.comments.map(c => `
           <div class="comment">
@@ -432,24 +507,15 @@ $('revBtn').onclick = async () => {
             </div>
             <div class="msg">${inlineCode(c.message)}</div>
           </div>`).join('')
-      : '<div class="hint">No comments — the diff looks clean.</div>';
-
-    const m = data.metrics;
-    $('revMetrics').innerHTML =
-      `<div class="metric"><div class="k">total</div><div class="v">${(m.total_ms / 1000).toFixed(1)} s</div></div>
-       <div class="metric"><div class="k">tokens in / out</div><div class="v">${m.input_tokens} / ${m.output_tokens}</div></div>`;
-    $('revMetrics').classList.remove('hidden');
+      : '<div style="color:var(--muted);font-size:13px;margin-top:8px">No comments — the diff looks clean.</div>';
   } catch (e) {
     $('revSummary').textContent = '';
     $('revErr').textContent = e.message;
     $('revErr').classList.remove('hidden');
-  } finally {
-    btn.disabled = false;
-  }
+  } finally { $('revBtn').disabled = false; }
 };
 
-$('q').addEventListener('keydown', e => { if (e.key === 'Enter') $('askBtn').click(); });
-$('repoNew').addEventListener('keydown', e => { if (e.key === 'Enter') $('loadBtn').click(); });
+refreshRepos();
 </script>
 </body>
 </html>

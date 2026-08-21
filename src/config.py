@@ -27,14 +27,18 @@ EMBEDDING_CACHE_DIR: Path = DATA_DIR / "embeddings"  # content-hash -> vector
 # Models
 # --------------------------------------------------------------------------
 
-# 384-dim, ~130 MB, 512-token window. Chosen over all-MiniLM-L6-v2, which is
-# the same width and speed but truncates at 256 tokens — about 15 lines of
-# Python. Measured on this repo under MiniLM: 12% of chunks truncated and 19%
-# of tokens never reached the encoder. Changing this constant is safe: the
-# embedding cache and the Chroma collection are both keyed on the model name
-# and rebuild themselves.
-EMBEDDING_MODEL: str = "BAAI/bge-small-en-v1.5"
-EMBEDDING_DIM: int = 384
+# 768-dim, ~440 MB, 512-token window. bge-base over bge-small on measurement:
+# R@8 — the k the agent actually consumes — improved on every gold slice
+# (dev 0.767 -> 0.822, held-out test 0.813 -> 0.833, test-semantic, the
+# weakest slice, 0.558 -> 0.608) at the cost of a small test MRR dip
+# (0.821 -> 0.806) and ~3x slower indexing. The model reads all 8 chunks, so
+# more right chunks in the window beats slightly better ordering of fewer.
+# (bge-small was itself chosen over all-MiniLM-L6-v2, whose 256-token window
+# truncated 12% of chunks.) Changing this constant is safe: the embedding
+# cache and the Chroma collection are both keyed on the model name and rebuild
+# themselves — but every indexed repo must be re-indexed before it can answer.
+EMBEDDING_MODEL: str = "BAAI/bge-base-en-v1.5"
+EMBEDDING_DIM: int = 768
 
 # Instruction prefix applied to the *query* side only. bge and e5 are trained
 # with one and lose retrieval quality without it; MiniLM was not, and wants "".
