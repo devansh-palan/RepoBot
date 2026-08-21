@@ -340,6 +340,7 @@ def _settings_fingerprint() -> str:
         config.RRF_BM25_WEIGHT_LEXICAL, config.RRF_BM25_WEIGHT_SEMANTIC,
         config.EMBEDDING_MODEL,
         sorted(config.DOC_EXTENSIONS), config.DOC_STEM_PATTERN,
+        config.PROMPT_CHUNK_CHAR_CAP,
         prompts.SYSTEM_PROMPT, prompts.REFLECTION_PROMPT,
         prompts.RETRY_NOTE, prompts.CITE_RETRY_NOTE,
     ))

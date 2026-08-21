@@ -45,6 +45,13 @@ EMBEDDING_QUERY_PREFIX: str = "Represent this sentence for searching relevant pa
 # the next fix; BM25 in phase 3 should cover the rest.
 EMBEDDING_BATCH_SIZE: int = 64
 
+# The most characters of any one chunk rendered into the model's prompt. A
+# chunk can be MAX_CHUNK_CHARS (8000) on disk, but prefill is over half of
+# time-to-first-token on a CPU-bound model, and one oversized module chunk can
+# double the prompt on its own. 3000 chars ≈ 60-80 lines — the head of a chunk
+# carries its signature and docstring, which is what grounding needs.
+PROMPT_CHUNK_CHAR_CAP: int = 3_000
+
 # Agent LLM. Answering and reviewing need the strongest model; the reflection
 # critic is a cheaper judgement call and can run on a smaller one.
 ANSWER_MODEL: str = "claude-opus-5"

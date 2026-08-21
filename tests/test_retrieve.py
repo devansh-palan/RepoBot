@@ -190,6 +190,30 @@ def test_loading_a_missing_index_explains_itself(tmp_path: Path) -> None:
         load_bm25(tmp_path, bm25_dir=tmp_path / "absent")
 
 
+def test_a_loaded_index_is_cached_until_the_file_changes(
+    repo: Path, tmp_path: Path
+) -> None:
+    """The server answers many questions per repo; unpickling and rebuilding
+    BM25Okapi per request is pure overhead. Re-indexing (new mtime/size) must
+    still invalidate, or a re-indexed repo would serve stale results forever."""
+    import time
+
+    BM25Index.build(ingest_repo(repo)).save(tmp_path / "bm25" / f"{_bm25_name(repo)}.pkl")
+
+    first = load_bm25(repo, bm25_dir=tmp_path / "bm25")
+    assert load_bm25(repo, bm25_dir=tmp_path / "bm25") is first, "second load is the cache"
+
+    time.sleep(0.01)  # ensure a distinct mtime even on coarse filesystems
+    BM25Index.build(ingest_repo(repo)).save(tmp_path / "bm25" / f"{_bm25_name(repo)}.pkl")
+    assert load_bm25(repo, bm25_dir=tmp_path / "bm25") is not first, "rebuild must invalidate"
+
+
+def _bm25_name(repo: Path) -> str:
+    from src.index import collection_name
+
+    return collection_name(repo)
+
+
 # --------------------------------------------------------------------------
 # RRF fusion
 # --------------------------------------------------------------------------

@@ -243,6 +243,51 @@ def test_agent_mode_streams_stages_and_a_grounded_verdict(
     assert done["attempts"] >= 1
 
 
+def test_agent_mode_streams_the_draft_live_and_resets_on_retry(
+    client: TestClient, repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A rejected draft is superseded: the client must see its tokens as they
+    stream, then a `reset` when the retry starts, then the new draft — not a
+    minute of silence followed by one blob."""
+    uncited = (
+        "Interest grows by multiplying the principal by one plus the rate "
+        "raised to the number of years, which is the compound interest "
+        "formula, and the retrying client wraps fetch with backoff so "
+        "transient failures are retried rather than surfaced to the caller."
+    )
+
+    class Sequential:
+        name = model = "seq"
+
+        def __init__(self) -> None:
+            self.replies = [
+                uncited,                                  # draft 1: no citations
+                "Interest compounds. `billing.py:4-6`",   # draft 2: cited
+                "GROUNDED: yes\nREASON: ok\nQUERY: NONE",  # critic verdict
+            ]
+
+        def complete(self, system, user, model=None, max_tokens=0, on_text=None):
+            text = self.replies.pop(0)
+            if on_text is not None:
+                on_text(text)
+            return LLMResponse(text=text, model=self.model, input_tokens=1, output_tokens=1)
+
+    use(monkeypatch, Sequential())
+    events = sse_events(
+        client.post("/ask", json={"repo": str(repo), "question": "q", "mode": "agent"}).text
+    )
+    names = [n for n, _ in events]
+
+    assert "reset" in names, "the retry must tell the client to clear the dead draft"
+    reset_at = names.index("reset")
+    assert "token" in names[:reset_at], "draft 1 must stream before the reset"
+    assert "token" in names[reset_at:], "draft 2 must stream after it"
+
+    done = next(d for n, d in events if n == "done")
+    assert done["answer"].startswith("Interest compounds"), "done carries the final draft"
+    assert done["grounded"] is True
+
+
 # --------------------------------------------------------------------------
 # Errors
 # --------------------------------------------------------------------------

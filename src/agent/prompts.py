@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from src import config
 from src.index import SearchResult
 
 SYSTEM_PROMPT = """\
@@ -49,9 +50,14 @@ def format_context(results: Sequence[SearchResult]) -> str:
     blocks = []
     for n, result in enumerate(results, start=1):
         chunk = result.chunk
+        code = chunk.code
+        if len(code) > config.PROMPT_CHUNK_CHAR_CAP:
+            # Prefill dominates TTFT on a CPU-bound model; one oversized chunk
+            # can double the prompt. The head carries signature and docstring.
+            code = code[: config.PROMPT_CHUNK_CHAR_CAP] + "\n… [truncated for length]"
         blocks.append(
             f"[{n}] {chunk.location}  {chunk.kind} {chunk.symbol}  ({chunk.language})\n"
-            f"```\n{chunk.code}\n```"
+            f"```\n{code}\n```"
         )
     return "\n\n".join(blocks)
 

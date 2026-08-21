@@ -183,6 +183,10 @@ async def _ask_events(request: AskRequest) -> AsyncIterator[str]:
                 # sees in agent mode, so it starts the TTFT clock.
                 timer.mark_first_token()
                 yield _sse("stage", payload)
+            elif kind == "reset":
+                # A rejected draft is being replaced; the client clears the
+                # streamed text rather than appending the retry to it.
+                yield _sse("reset", payload)
             elif kind == "sources":
                 yield _sse("sources", [s.model_dump() for s in _sources(payload)])
             elif kind == "failed":
@@ -228,20 +232,34 @@ def _run_plain_blocking(request: AskRequest, provider, emit) -> AskResult:
 
 
 def _run_agent_blocking(request: AskRequest, provider, emit) -> AskResult:
-    """The reflection loop.
+    """The reflection loop, narrated live.
 
-    Streams stage events rather than tokens: the graph may reject a draft and
-    answer again, and streaming text that is about to be discarded would show
-    the user a wrong answer and then silently replace it.
+    Drafts stream as the model writes them — a minute of silence before a
+    finished answer reads as a hang. A rejected draft is superseded, so each
+    new attempt is preceded by a `reset` event telling the client to clear the
+    streamed text; the `done` event carries the authoritative answer (which may
+    be an *earlier* draft, when the loop ends ungrounded and a fuller attempt
+    scored better).
     """
-    emit("stage", {"stage": "retrieve", "detail": "searching the repository"})
+    drafts = {"count": 0}
 
-    result = run_agent(request.repo, request.question, k=request.k, provider=provider)
+    def on_stage(stage: str, detail: str) -> None:
+        if stage == "draft":
+            drafts["count"] += 1
+            if drafts["count"] > 1:
+                emit("reset", {"attempt": drafts["count"]})
+        emit("stage", {"stage": stage, "detail": detail})
 
-    for line in result.trace:
-        emit("stage", {"stage": "trace", "detail": line})
+    result = run_agent(
+        request.repo,
+        request.question,
+        k=request.k,
+        provider=provider,
+        on_token=lambda text: emit("token", text),
+        on_stage=on_stage,
+    )
+
     emit("sources", result.results)
-    emit("token", result.answer)
 
     return AskResult(
         question=result.question,

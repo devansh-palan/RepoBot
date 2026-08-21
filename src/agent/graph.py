@@ -20,6 +20,7 @@ retrieve the same chunks and pay for a model call to learn nothing.
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from pathlib import Path
 
 from langgraph.graph import END, START, StateGraph
@@ -45,6 +46,9 @@ from .tools import format_results, search_code
 # forever, and on a local model that is a real possibility, not a hypothetical.
 MAX_ATTEMPTS = 3
 
+#: Progress callback: (stage, detail). None means run silently.
+Notify = Callable[[str, str], None] | None
+
 # An answer shorter than this is something like "the excerpts do not show that",
 # which is a legitimate response and needs no citation. Anything longer is
 # making claims, and a claim with no citation cannot be checked.
@@ -67,7 +71,7 @@ def _merge(seen: list[SearchResult], fresh: list[SearchResult]) -> list[SearchRe
 # ---------------------------------------------------------------------------
 
 
-def retrieve(state: AgentState) -> AgentState:
+def retrieve(state: AgentState, note: Notify = None) -> AgentState:
     """Search the repo and add what it finds to the accumulated evidence.
 
     On the first pass the query is the question. On a retry it is whatever the
@@ -79,6 +83,8 @@ def retrieve(state: AgentState) -> AgentState:
         "question"
     ]
 
+    if note:
+        note("retrieve", f"searching: {query}")
     fresh = search_code(
         state["repo_path"],
         query,
@@ -100,11 +106,21 @@ def retrieve(state: AgentState) -> AgentState:
     }
 
 
-def generate(state: AgentState, provider: Provider) -> AgentState:
+def generate(
+    state: AgentState,
+    provider: Provider,
+    on_token: Callable[[str], None] | None = None,
+    note: Notify = None,
+) -> AgentState:
     """Answer from the accumulated evidence.
 
     Uses `seen`, not `results`: on a retry the model should see everything found
     so far, not only the newest search.
+
+    `on_token` streams the draft as it generates. The caller is told when each
+    draft starts (the "draft" note) so it can clear a superseded draft — the
+    alternative, silence until the whole loop ends, makes a 60-second answer
+    look like a hang.
     """
     evidence = state.get("seen", [])
     if not evidence:
@@ -112,6 +128,10 @@ def generate(state: AgentState, provider: Provider) -> AgentState:
             "answer": NO_CONTEXT_ANSWER,
             "trace": [*state.get("trace", []), "generate: nothing retrieved, skipping the model"],
         }
+
+    if note:
+        attempt = state.get("attempts", 0) + 1
+        note("draft", f"answering from {len(evidence)} chunks (attempt {attempt})")
 
     prompt = build_user_prompt(state["question"], evidence)
     critique = state.get("critique")
@@ -126,7 +146,7 @@ def generate(state: AgentState, provider: Provider) -> AgentState:
         else:
             prompt += RETRY_NOTE.format(reason=critique.reason or "claims were unsupported")
 
-    response = provider.complete(system=SYSTEM_PROMPT, user=prompt)
+    response = provider.complete(system=SYSTEM_PROMPT, user=prompt, on_text=on_token)
 
     return {
         "answer": response.text,
@@ -140,7 +160,7 @@ def generate(state: AgentState, provider: Provider) -> AgentState:
     }
 
 
-def reflect(state: AgentState, provider: Provider) -> AgentState:
+def reflect(state: AgentState, provider: Provider, note: Notify = None) -> AgentState:
     """Decide whether every claim is backed by retrieved code.
 
     Two checks, cheapest first:
@@ -155,6 +175,8 @@ def reflect(state: AgentState, provider: Provider) -> AgentState:
     answer = state.get("answer", "")
     evidence = state.get("seen", [])
     attempts = state.get("attempts", 0) + 1
+    if note:
+        note("reflect", "checking every claim against the retrieved code")
 
     if not evidence:
         # Nothing was retrieved, so there is nothing to be grounded in and no
@@ -164,7 +186,7 @@ def reflect(state: AgentState, provider: Provider) -> AgentState:
             reason="retrieval found no code for this question",
             kind="no_evidence",
         )
-        return _record(state, critique, attempts)
+        return _record(state, critique, attempts, note)
 
     retrieved = {r.chunk.location for r in evidence}
     cited = _citations(answer)
@@ -194,7 +216,7 @@ def reflect(state: AgentState, provider: Provider) -> AgentState:
             followup_query="",  # retrieval was fine; the answer needs rewriting
             kind="no_citations",
         )
-        return _record(state, critique, attempts)
+        return _record(state, critique, attempts, note)
 
     unsupported = tuple(
         c for c in cited if c not in retrieved and not _cites_retrieved_chunk(c, evidence)
@@ -208,13 +230,17 @@ def reflect(state: AgentState, provider: Provider) -> AgentState:
             unsupported=unsupported,
             kind="fabricated",
         )
-        return _record(state, critique, attempts)
+        return _record(state, critique, attempts, note)
 
     verdict = _ask_critic(provider, state["question"], answer, evidence)
-    return _record(state, verdict, attempts)
+    return _record(state, verdict, attempts, note)
 
 
-def _record(state: AgentState, critique: Critique, attempts: int) -> AgentState:
+def _record(
+    state: AgentState, critique: Critique, attempts: int, note: Notify = None
+) -> AgentState:
+    if note:
+        note("verdict", str(critique))
     return {
         "attempts": attempts,
         "critique": critique,
@@ -435,18 +461,23 @@ def _best_attempt(answers: list[str], critiques: list[Critique]) -> int:
 # ---------------------------------------------------------------------------
 
 
-def build_graph(provider: Provider | None = None):
+def build_graph(
+    provider: Provider | None = None,
+    on_token: Callable[[str], None] | None = None,
+    on_stage: Notify = None,
+):
     """Wire the nodes together and compile.
 
-    The provider is bound here rather than carried in state: it holds a live
-    client, and state should stay plain data that can be logged or serialised.
+    The provider and callbacks are bound here rather than carried in state: the
+    provider holds a live client, the callbacks close over a live stream, and
+    state should stay plain data that can be logged or serialised.
     """
     provider = provider or get_provider()
 
     graph = StateGraph(AgentState)
-    graph.add_node("retrieve", retrieve)
-    graph.add_node("generate", lambda s: generate(s, provider))
-    graph.add_node("reflect", lambda s: reflect(s, provider))
+    graph.add_node("retrieve", lambda s: retrieve(s, on_stage))
+    graph.add_node("generate", lambda s: generate(s, provider, on_token, on_stage))
+    graph.add_node("reflect", lambda s: reflect(s, provider, on_stage))
 
     graph.add_edge(START, "retrieve")
     graph.add_edge("retrieve", "generate")   # never answer without evidence
@@ -466,9 +497,16 @@ def run_agent(
     provider: Provider | None = None,
     persist_dir: str | None = None,
     bm25_dir: str | Path | None = None,
+    on_token: Callable[[str], None] | None = None,
+    on_stage: Notify = None,
 ) -> AgentResult:
-    """Answer a question with retrieval, generation, and a reflection loop."""
-    app = build_graph(provider)
+    """Answer a question with retrieval, generation, and a reflection loop.
+
+    `on_token` streams each draft as the model writes it; `on_stage` narrates
+    the loop (retrieve / draft / reflect / verdict). Both exist for the serve
+    layer: a minute of silence before a finished answer reads as a hang.
+    """
+    app = build_graph(provider, on_token, on_stage)
     final = app.invoke(
         {
             "question": question,

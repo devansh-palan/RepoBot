@@ -356,6 +356,12 @@ $('askBtn').onclick = async () => {
       if (ev === 'token') {
         text += data.text;
         answerEl.innerHTML = inlineCode(text);
+      } else if (ev === 'reset') {
+        // The draft on screen was rejected by reflection; a new attempt is
+        // starting, so clear rather than append.
+        text = '';
+        answerEl.innerHTML = '';
+        stagesEl.innerHTML += `<div>revising the answer (attempt ${data.attempt})…</div>`;
       } else if (ev === 'stage') {
         stagesEl.innerHTML += `<div>${esc(data.detail || data.stage)}</div>`;
       } else if (ev === 'done') {

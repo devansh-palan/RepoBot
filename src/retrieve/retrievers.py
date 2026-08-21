@@ -36,12 +36,37 @@ def _bm25_path(repo_path: str | Path, bm25_dir: str | Path | None) -> Path:
     return (Path(bm25_dir) / f"{name}.pkl") if bm25_dir else bm25_path_for(name)
 
 
+# Loaded indexes, keyed by (path, mtime, size). Without this every request
+# unpickles the index AND rebuilds BM25Okapi from scratch — hundreds of ms of
+# pure overhead per question in the server, which holds no other per-repo
+# state. Keying on mtime+size means re-indexing invalidates naturally; stale
+# entries for old mtimes are dropped so a long-lived server does not accumulate
+# one dead index per re-index.
+_BM25_CACHE: dict[tuple[str, float, int], BM25Index] = {}
+
+
 def load_bm25(repo_path: str | Path, bm25_dir: str | Path | None = None) -> BM25Index:
     """Read the keyword index for a repo, or explain that it needs building."""
     path = _bm25_path(repo_path, bm25_dir)
+    try:
+        stat = path.stat()
+    except OSError:
+        raise MissingIndexError(
+            f"no BM25 index at {path}; run index_repo({repo_path!r}) first"
+        ) from None
+
+    key = (str(path.resolve()), stat.st_mtime, stat.st_size)
+    cached = _BM25_CACHE.get(key)
+    if cached is not None:
+        return cached
+
     index = BM25Index.load(path)
     if index is None:
         raise MissingIndexError(f"no BM25 index at {path}; run index_repo({repo_path!r}) first")
+
+    for old in [k for k in _BM25_CACHE if k[0] == key[0]]:
+        del _BM25_CACHE[old]
+    _BM25_CACHE[key] = index
     return index
 
 

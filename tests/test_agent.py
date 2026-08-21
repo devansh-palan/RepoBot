@@ -123,6 +123,22 @@ def test_format_context_labels_each_excerpt_with_its_citation() -> None:
     assert "def parse(): pass" in rendered
 
 
+def test_format_context_caps_an_oversized_chunk() -> None:
+    """Prefill is over half of time-to-first-token on a CPU-bound model; one
+    8000-char module chunk must not double the prompt. The head survives —
+    signature and docstring are what grounding needs — and the cut is marked
+    so the model does not treat the truncation point as the end of the code."""
+    big = _result("big.py", 1, 200)
+    big.chunk.__dict__["code"] = "x = 1\n" * 2_000  # ~12000 chars, frozen dataclass
+
+    rendered = format_context([big])
+    assert len(rendered) < config.PROMPT_CHUNK_CHAR_CAP + 500
+    assert "[truncated for length]" in rendered
+
+    small = format_context([_result("small.py", 1, 2)])
+    assert "[truncated for length]" not in small
+
+
 def test_format_context_numbers_excerpts_in_rank_order() -> None:
     rendered = format_context(
         [_result("a.py", 1, 2, "a", rank=1), _result("b.py", 3, 4, "b", rank=2)]
