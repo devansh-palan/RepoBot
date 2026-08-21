@@ -463,7 +463,7 @@ def test_the_ui_is_served_from_the_root(client: TestClient) -> None:
     response = client.get("/")
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
-    assert "Codebase Q&amp;A" in response.text
+    assert "RepoBot" in response.text
 
 
 def test_the_ui_has_no_external_dependencies() -> None:

@@ -3,168 +3,203 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Codebase Q&amp;A + Review</title>
+<title>RepoBot</title>
 <style>
+  /* Warm paper light theme; warm charcoal dark. Soft contrast on purpose —
+     hairline borders, muted accent, no loud chrome. */
   :root {
-    --bg: #f7f7f5;      --panel: #ffffff;  --side: #efefec;
-    --ink: #1a1a19;     --muted: #6b6b68;  --line: #e2e2df;
-    --accent: #2f6f4f;  --accent-ink: #ffffff;
-    --code-bg: #ececea; --user-bg: #e7efe9;
-    --blocker: #b3261e; --warning: #a15c00; --suggestion: #2f6f4f; --note: #6b6b68;
-    --radius: 10px;
+    --bg: #f6f4ef;      --panel: #fdfcf9;  --side: #f0ede6;
+    --ink: #35322c;     --soft: #6f6a60;   --faint: #a39d90;
+    --line: #e5e1d8;    --accent: #7d9b76; --accent-deep: #5c7a56;
+    --accent-ink: #ffffff;
+    --code-bg: #edeae2; --user-bg: #ece8de;
+    --danger: #b0614f;  --warn: #a98a4f;
+    --shadow: 0 1px 3px rgba(60, 55, 45, 0.06);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #131417;    --panel: #1b1c20;  --side: #17181c;
-      --ink: #e8e8e6;   --muted: #989894;  --line: #2b2c31;
-      --accent: #6dbb8f; --accent-ink: #10110f;
-      --code-bg: #26272c; --user-bg: #20262a;
-      --blocker: #f2837b; --warning: #e0a350; --suggestion: #6dbb8f; --note: #989894;
+      --bg: #191816;    --panel: #201f1c;  --side: #1c1b18;
+      --ink: #e6e2da;   --soft: #a49e92;   --faint: #736e63;
+      --line: #2d2b26;  --accent: #8fae88; --accent-deep: #a9c4a2;
+      --accent-ink: #14140f;
+      --code-bg: #2a2924; --user-bg: #262521;
+      --danger: #cf8874; --warn: #c3a26b;
+      --shadow: none;
     }
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
-    font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font: 15px/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     display: flex; overflow: hidden;
+    -webkit-font-smoothing: antialiased;
   }
-  code, pre, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  code, pre, .mono { font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; }
   button { font: inherit; cursor: pointer; }
+  .serif { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
 
   /* ── sidebar ─────────────────────────────────────────────────────── */
   aside {
-    width: 280px; flex: 0 0 280px; background: var(--side);
+    width: 272px; flex: 0 0 272px; background: var(--side);
     border-right: 1px solid var(--line);
     display: flex; flex-direction: column; min-height: 0;
   }
-  .brand { padding: 18px 16px 10px; }
-  .brand h1 { font-size: 16px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
-  .brand .sub { color: var(--muted); font-size: 12px; }
+  .brand { padding: 22px 20px 14px; }
+  .brand h1 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 21px; margin: 0; font-weight: 600; letter-spacing: 0.01em;
+  }
+  .brand h1 .leaf { color: var(--accent-deep); }
+  .brand .sub { color: var(--soft); font-size: 12.5px; margin-top: 2px; }
 
-  .addbox { padding: 8px 12px 14px; border-bottom: 1px solid var(--line); }
+  .addbox { padding: 4px 14px 16px; }
   .addbox input {
-    width: 100%; padding: 9px 11px; font: inherit; font-size: 13.5px;
+    width: 100%; padding: 9px 12px; font: inherit; font-size: 13px;
     color: var(--ink); background: var(--panel);
-    border: 1px solid var(--line); border-radius: 8px;
+    border: 1px solid var(--line); border-radius: 10px;
   }
-  .addbox input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .addbox input::placeholder { color: var(--faint); }
+  .addbox input:focus { outline: none; border-color: var(--accent); }
   .addbox button {
-    width: 100%; margin-top: 8px; padding: 8px; border: 0; border-radius: 8px;
-    background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 13.5px;
+    width: 100%; margin-top: 8px; padding: 8px; border: 1px solid var(--line);
+    border-radius: 10px; background: var(--panel); color: var(--ink);
+    font-size: 13px; font-weight: 550;
   }
+  .addbox button:hover { border-color: var(--accent); color: var(--accent-deep); }
   .addbox button[disabled] { opacity: .5; cursor: default; }
 
-  #repoList { flex: 1; overflow-y: auto; padding: 8px; }
+  .listlabel { padding: 4px 22px 6px; font-size: 11px; color: var(--faint);
+               letter-spacing: .08em; text-transform: uppercase; }
+  #repoList { flex: 1; overflow-y: auto; padding: 0 10px 10px; }
   .repo {
-    display: flex; align-items: center; gap: 8px;
-    width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 2px;
-    border: 0; border-radius: 8px; background: none; color: var(--ink); font-size: 13.5px;
+    display: flex; align-items: center; gap: 9px;
+    width: 100%; text-align: left; padding: 9px 12px; margin-bottom: 1px;
+    border: 0; border-radius: 9px; background: none; color: var(--soft); font-size: 13.5px;
   }
-  .repo:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
-  .repo.active { background: var(--panel); font-weight: 600;
-                 box-shadow: inset 0 0 0 1px var(--line); }
-  .repo .dot { width: 7px; height: 7px; border-radius: 99px; flex: 0 0 7px; background: var(--accent); }
-  .repo.pending .dot { background: var(--warning); }
+  .repo:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); color: var(--ink); }
+  .repo.active { background: var(--panel); color: var(--ink); font-weight: 550;
+                 box-shadow: var(--shadow); }
+  .repo .dot { width: 6px; height: 6px; border-radius: 99px; flex: 0 0 6px;
+               background: var(--accent); }
+  .repo.pending .dot { background: var(--warn); }
   .repo .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  .side-foot { padding: 10px 16px; border-top: 1px solid var(--line);
-               font-size: 12px; color: var(--muted); }
-  .side-foot a { color: var(--muted); }
+  .side-foot { padding: 12px 20px; border-top: 1px solid var(--line);
+               font-size: 12px; color: var(--faint); }
   .side-foot .row2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  #reviewLink { background: none; border: 0; color: var(--muted); font-size: 12px;
-                text-decoration: underline; padding: 0; }
+  #reviewLink { background: none; border: 0; color: var(--soft); font-size: 12px; padding: 0; }
+  #reviewLink:hover { color: var(--ink); }
 
   /* ── main ────────────────────────────────────────────────────────── */
   main { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 
   .topbar {
     display: flex; align-items: center; gap: 10px;
-    padding: 12px 22px; border-bottom: 1px solid var(--line); background: var(--panel);
+    padding: 14px 26px; border-bottom: 1px solid var(--line);
   }
-  #currentRepo { font-weight: 650; font-size: 14.5px; overflow: hidden;
+  #currentRepo { font-size: 14px; color: var(--soft); overflow: hidden;
                  text-overflow: ellipsis; white-space: nowrap; }
   .topbar .spacer { flex: 1; }
-  #clearChat { background: none; border: 1px solid var(--line); border-radius: 7px;
-               color: var(--muted); font-size: 12px; padding: 4px 10px; }
+  #clearChat { background: none; border: 0; color: var(--faint); font-size: 12.5px; padding: 4px 6px; }
   #clearChat:hover { color: var(--ink); }
 
   #scroller { flex: 1; overflow-y: auto; min-height: 0; }
-  #chat, #idxCard, #welcome { max-width: 780px; margin: 0 auto; padding: 18px 22px 8px; }
+  #chat, #idxCard, #welcome { max-width: 720px; margin: 0 auto; padding: 26px 26px 8px; }
 
-  #welcome { color: var(--muted); font-size: 14px; padding-top: 48px; text-align: center; }
-  #welcome b { color: var(--ink); }
-
-  .turn { margin: 0 0 18px; }
-  .turn.q .bubble {
-    background: var(--user-bg); border-radius: var(--radius);
-    padding: 10px 14px; display: inline-block; max-width: 92%; font-weight: 550;
+  #welcome { color: var(--soft); font-size: 14.5px; padding-top: 12vh; text-align: center; }
+  #welcome h2 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-weight: 600; font-size: 26px; color: var(--ink); margin: 0 0 10px;
   }
-  .turn.a .bubble { padding: 2px 0; }
-  .answer { white-space: pre-wrap; word-wrap: break-word; }
-  .answer code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  #welcome p { line-height: 1.8; margin: 0; }
 
-  .status { display: flex; align-items: center; gap: 8px; color: var(--muted);
-            font-size: 13px; padding: 4px 0; }
+  .turn { margin: 0 0 26px; }
+  .turn.q { text-align: right; }
+  .turn.q .bubble {
+    background: var(--user-bg); border-radius: 14px 14px 4px 14px;
+    padding: 10px 16px; display: inline-block; max-width: 88%; text-align: left;
+  }
+  .turn.a .bubble { padding: 0; }
+  .answer { white-space: pre-wrap; word-wrap: break-word; }
+  .answer code { background: var(--code-bg); padding: 1px 5px; border-radius: 5px; font-size: 13px; }
+
+  .status { display: flex; align-items: center; gap: 9px; color: var(--faint);
+            font-size: 13px; padding: 2px 0 8px; }
   .status .spin {
-    width: 12px; height: 12px; flex: 0 0 12px; border-radius: 99px;
-    border: 2px solid var(--line); border-top-color: var(--accent);
-    animation: rot 0.9s linear infinite;
+    width: 11px; height: 11px; flex: 0 0 11px; border-radius: 99px;
+    border: 1.5px solid var(--line); border-top-color: var(--accent);
+    animation: rot 1s linear infinite;
   }
   @keyframes rot { to { transform: rotate(360deg); } }
 
-  .meta { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap;
-          margin-top: 8px; font-size: 12px; color: var(--muted); }
-  .badge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 11px;
-           font-weight: 650; text-transform: uppercase; letter-spacing: .03em; }
-  .ok { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
-  .bad { background: color-mix(in srgb, var(--blocker) 18%, transparent); color: var(--blocker); }
+  .meta { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap;
+          margin-top: 10px; font-size: 12px; color: var(--faint); }
+  .verdict { display: inline-flex; align-items: center; gap: 5px; }
+  .verdict .vdot { width: 6px; height: 6px; border-radius: 99px; }
+  .verdict.ok { color: var(--accent-deep); }
+  .verdict.ok .vdot { background: var(--accent); }
+  .verdict.bad { color: var(--danger); }
+  .verdict.bad .vdot { background: var(--danger); }
 
   details.sources { margin-top: 6px; }
-  details.sources summary { cursor: pointer; color: var(--muted); font-size: 12.5px; }
-  .src { display: flex; gap: 10px; padding: 4px 0; font-size: 12.5px; border-bottom: 1px solid var(--line); }
-  .src .loc { color: var(--accent); }
-  .src .sym { color: var(--muted); }
+  details.sources summary { cursor: pointer; color: var(--faint); font-size: 12px; }
+  details.sources summary:hover { color: var(--soft); }
+  .src { display: flex; gap: 10px; padding: 4px 0; font-size: 12.5px;
+         border-bottom: 1px solid var(--line); }
+  .src .loc { color: var(--accent-deep); }
+  .src .sym { color: var(--soft); }
 
-  .err { color: var(--blocker); background: color-mix(in srgb, var(--blocker) 10%, transparent);
-         padding: 9px 12px; border-radius: 8px; margin-top: 8px; font-size: 13.5px; }
+  .err { color: var(--danger); background: color-mix(in srgb, var(--danger) 9%, transparent);
+         padding: 9px 12px; border-radius: 10px; margin-top: 8px; font-size: 13.5px; }
 
   /* indexing card */
   #idxCard .card { background: var(--panel); border: 1px solid var(--line);
-                   border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; }
-  #idxCard .lines { font-size: 12.5px; color: var(--muted); }
+                   border-radius: 14px; padding: 16px 18px; margin-bottom: 14px;
+                   box-shadow: var(--shadow); }
+  #idxCard b { font-size: 13.5px; font-weight: 600; }
+  #idxCard .lines { font-size: 12.5px; color: var(--soft); margin-top: 4px; }
   #idxCard .lines div { padding: 1px 0; }
 
   /* composer */
-  .composer { border-top: 1px solid var(--line); background: var(--panel); }
-  .composer .inner { max-width: 780px; margin: 0 auto; padding: 14px 22px 18px;
+  .composer { background: linear-gradient(to top, var(--bg) 70%, transparent); }
+  .composer .inner { max-width: 720px; margin: 0 auto; padding: 10px 26px 22px;
                      display: flex; gap: 10px; }
   .composer input {
-    flex: 1; padding: 12px 14px; font: inherit; color: var(--ink);
-    background: var(--bg); border: 1px solid var(--line); border-radius: 12px;
+    flex: 1; padding: 13px 16px; font: inherit; color: var(--ink);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: var(--shadow);
   }
-  .composer input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .composer input::placeholder { color: var(--faint); }
+  .composer input:focus { outline: none; border-color: var(--accent); }
   .composer button {
-    padding: 0 22px; border: 0; border-radius: 12px;
-    background: var(--accent); color: var(--accent-ink); font-weight: 650;
+    padding: 0 22px; border: 0; border-radius: 14px;
+    background: var(--accent-deep); color: var(--accent-ink); font-weight: 600;
   }
-  .composer button[disabled] { opacity: .45; cursor: default; }
+  @media (prefers-color-scheme: dark) {
+    .composer button { color: #14140f; }
+  }
+  .composer button:hover { filter: brightness(1.06); }
+  .composer button[disabled] { opacity: .4; cursor: default; }
 
   /* review view */
-  #reviewView { max-width: 780px; margin: 0 auto; padding: 18px 22px; width: 100%; }
+  #reviewView { max-width: 720px; margin: 0 auto; padding: 26px; width: 100%; }
+  #reviewView h3 { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+                   font-weight: 600; margin: 0 0 4px; }
   #reviewView textarea {
-    width: 100%; min-height: 180px; resize: vertical; margin-top: 8px;
+    width: 100%; min-height: 180px; resize: vertical; margin-top: 10px;
     font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px;
     color: var(--ink); background: var(--panel); border: 1px solid var(--line);
-    border-radius: 8px; padding: 10px;
+    border-radius: 12px; padding: 12px;
   }
-  #reviewView .go { margin-top: 10px; padding: 9px 18px; border: 0; border-radius: 8px;
-                    background: var(--accent); color: var(--accent-ink); font-weight: 600; }
-  .comment { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  #reviewView textarea:focus { outline: none; border-color: var(--accent); }
+  #reviewView .go { margin-top: 10px; padding: 9px 20px; border: 0; border-radius: 10px;
+                    background: var(--accent-deep); color: var(--accent-ink); font-weight: 600; }
+  .comment { padding: 11px 0; border-bottom: 1px solid var(--line); }
   .comment .head { display: flex; gap: 10px; align-items: baseline; font-size: 13px; }
-  .comment .sev { font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: .04em; }
-  .sev-blocker { color: var(--blocker); } .sev-warning { color: var(--warning); }
-  .sev-suggestion { color: var(--suggestion); } .sev-note { color: var(--note); }
+  .comment .sev { font-weight: 650; font-size: 12px; }
+  .sev-blocker { color: var(--danger); } .sev-warning { color: var(--warn); }
+  .sev-suggestion { color: var(--accent-deep); } .sev-note { color: var(--soft); }
   .comment .msg { margin-top: 3px; }
 
   .hidden { display: none !important; }
@@ -176,20 +211,21 @@
     #menuBtn { display: inline-block; }
   }
   #menuBtn { display: none; background: none; border: 1px solid var(--line);
-             border-radius: 7px; color: var(--muted); padding: 3px 10px; }
+             border-radius: 8px; color: var(--soft); padding: 3px 10px; }
 </style>
 </head>
 <body>
 
 <aside id="sidebar">
   <div class="brand">
-    <h1>Codebase Q&amp;A</h1>
-    <div class="sub">chat with any GitHub repository</div>
+    <h1>Repo<span class="leaf">Bot</span></h1>
+    <div class="sub">Codebase Q&amp;A, grounded in the source</div>
   </div>
   <div class="addbox">
-    <input id="repoNew" placeholder="owner/repo  e.g. psf/requests" spellcheck="false">
-    <button id="loadBtn">+ Add repository</button>
+    <input id="repoNew" placeholder="github.com/owner/repo" spellcheck="false">
+    <button id="loadBtn">Add repository</button>
   </div>
+  <div class="listlabel">Repositories</div>
   <div id="repoList"></div>
   <div class="side-foot">
     <div class="row2">
@@ -209,24 +245,26 @@
 
   <div id="scroller">
     <div id="idxCard" class="hidden"><div class="card">
-      <b style="font-size:13.5px" id="idxTitle">Indexing…</b>
+      <b id="idxTitle">Indexing…</b>
       <div class="lines" id="idxLines"></div>
       <div id="idxErr" class="err hidden"></div>
     </div></div>
 
     <div id="welcome">
-      <p><b>Pick a repository</b> on the left, or paste a GitHub repo to add one.<br>
-      It is cloned and indexed once — then ask anything about its code.<br>
-      Every answer is checked against the retrieved source before you see a verdict.</p>
+      <h2>Ask a codebase anything</h2>
+      <p>Add a GitHub repository on the left — it is cloned and indexed once.<br>
+      Then ask questions in plain language; every answer is checked<br>
+      against the retrieved source before it earns its verdict.</p>
     </div>
 
     <div id="chat"></div>
 
     <div id="reviewView" class="hidden">
-      <b>Review a diff against <span id="revRepoName">the selected repo</span></b>
+      <h3>Review a diff</h3>
+      <div style="color:var(--soft);font-size:13px">against <span id="revRepoName">the selected repository</span></div>
       <textarea id="diff" spellcheck="false" placeholder="Paste a unified diff (git diff main...)"></textarea>
       <button class="go" id="revBtn">Review</button>
-      <div id="revSummary" style="margin-top:12px;color:var(--muted);font-size:13px"></div>
+      <div id="revSummary" style="margin-top:12px;color:var(--soft);font-size:13px"></div>
       <div id="revErr" class="err hidden"></div>
       <div id="comments"></div>
     </div>
@@ -310,7 +348,7 @@ function selectRepo(path) {
   const ready = Boolean(repo && repo.indexed);
   $('q').disabled = !ready; $('askBtn').disabled = !ready;
   $('q').placeholder = !repo ? 'Ask about this codebase…'
-    : (ready ? `Ask about ${repo.name}…` : 'This repo is not indexed yet — press "+ Add repository" with it selected.');
+    : (ready ? `Ask about ${repo.name}…` : 'Not indexed yet — press "Add repository" with it selected.');
 
   renderChat();
   $('sidebar').classList.remove('open');
@@ -331,11 +369,13 @@ function sourcesBlock(list) {
 }
 
 function metaBlock(t) {
-  let badge = '';
-  if (t.grounded === true) badge = '<span class="badge ok">grounded</span>';
-  if (t.grounded === false) badge = '<span class="badge bad">not grounded</span>';
+  let verdict = '';
+  if (t.grounded === true)
+    verdict = '<span class="verdict ok"><span class="vdot"></span>grounded in the source</span>';
+  if (t.grounded === false)
+    verdict = '<span class="verdict bad"><span class="vdot"></span>could not be verified</span>';
   const secs = t.seconds ? `${t.seconds}s` : '';
-  return `<div class="meta">${badge}<span>${esc(secs)}</span></div>`;
+  return `<div class="meta">${verdict}<span>${esc(secs)}</span></div>`;
 }
 
 function renderChat() {
@@ -387,12 +427,12 @@ $('loadBtn').onclick = async () => {
 };
 
 // ── asking ────────────────────────────────────────────────────────────
-// The loop's stages are internal; the user sees one friendly status line
-// that updates in place, never a log.
+// The loop's stages are internal; the user sees one calm status line that
+// updates in place, never a log.
 const STATUS = {
-  retrieve: 'Searching the codebase…',
+  retrieve: 'Reading the codebase…',
   draft: 'Writing an answer…',
-  reflect: 'Checking the answer against the code…',
+  reflect: 'Checking it against the source…',
 };
 
 $('askBtn').onclick = async () => {
@@ -408,7 +448,7 @@ $('askBtn').onclick = async () => {
   const turn = document.createElement('div');
   turn.className = 'turn a';
   turn.innerHTML = `<div class="bubble">
-      <div class="status"><span class="spin"></span><span class="stext">Searching the codebase…</span></div>
+      <div class="status"><span class="spin"></span><span class="stext">Reading the codebase…</span></div>
       <div class="answer"></div>
     </div>`;
   chat.appendChild(turn);
@@ -428,7 +468,7 @@ $('askBtn').onclick = async () => {
         $('scroller').scrollTop = $('scroller').scrollHeight;
       } else if (ev === 'reset') {
         text = ''; answerEl.innerHTML = '';
-        stext.textContent = 'Improving the answer…';
+        stext.textContent = 'Taking another pass…';
       } else if (ev === 'stage') {
         if (STATUS[data.stage]) stext.textContent = STATUS[data.stage];
       } else if (ev === 'done') {
@@ -476,7 +516,7 @@ $('reviewLink').onclick = () => {
   $('composer').classList.toggle('hidden', reviewing);
   $('welcome').classList.add('hidden');
   const repo = repos.find(r => r.path === current);
-  $('revRepoName').textContent = repo ? repo.name : 'the selected repo';
+  $('revRepoName').textContent = repo ? repo.name : 'the selected repository';
   $('sidebar').classList.remove('open');
 };
 
@@ -507,7 +547,7 @@ $('revBtn').onclick = async () => {
             </div>
             <div class="msg">${inlineCode(c.message)}</div>
           </div>`).join('')
-      : '<div style="color:var(--muted);font-size:13px;margin-top:8px">No comments — the diff looks clean.</div>';
+      : '<div style="color:var(--soft);font-size:13px;margin-top:8px">No comments — the diff looks clean.</div>';
   } catch (e) {
     $('revSummary').textContent = '';
     $('revErr').textContent = e.message;

@@ -47,9 +47,9 @@ from .schemas import (
 STATIC_DIR = Path(__file__).parent / "static"
 
 app = FastAPI(
-    title="Codebase Q&A + PR Review Agent",
+    title="RepoBot",
     version="0.1.0",
-    description="Grounded answers and diff review over an indexed repository.",
+    description="Codebase Q&A and diff review, grounded in the indexed source.",
 )
 
 
